@@ -4,34 +4,61 @@
       "route": "dashboard",
       "name": "dashboard",
       "type": "link",
-      "icon": "dashboard",
-      "badge": {
-        "color": "red-50",
-        "value": "5"
-      }
+      "icon": "dashboard"
     },
     {
-      "route": "/",
-      "name": "sessions",
-      "type": "sub",
-      "icon": "question_answer",
-      "children": [
-        {
-          "route": "403",
-          "name": "403",
-          "type": "link"
-        },
-        {
-          "route": "404",
-          "name": "404",
-          "type": "link"
-        },
-        {
-          "route": "500",
-          "name": "500",
-          "type": "link"
-        }
-      ]
+      "route": "trucks",
+      "name": "trucks",
+      "type": "link",
+      "icon": "local_shipping"
+    },
+    {
+      "route": "drivers",
+      "name": "drivers",
+      "type": "link",
+      "icon": "person"
+    },
+    {
+      "route": "customers",
+      "name": "customers",
+      "type": "link",
+      "icon": "business"
+    },
+    {
+      "route": "warehouses",
+      "name": "warehouses",
+      "type": "link",
+      "icon": "warehouse"
+    },
+    {
+      "route": "shipments",
+      "name": "shipments",
+      "type": "link",
+      "icon": "inventory_2"
+    },
+    {
+      "route": "tracking",
+      "name": "tracking",
+      "type": "link",
+      "icon": "location_on"
+    },
+    {
+      "route": "maintenance",
+      "name": "maintenance",
+      "type": "link",
+      "icon": "build"
+    },
+    {
+      "route": "notifications",
+      "name": "notifications",
+      "type": "link",
+      "icon": "notifications"
+    },
+    {
+      "route": "reports",
+      "name": "reports",
+      "type": "link",
+      "icon": "bar_chart"
     }
   ]
 }

@@ -1,9 +1,19 @@
 {
   "menu": {
-    "dashboard": "Dashboard",
-    "design": "Design",
+  "dashboard": "Tableau de bord",
+  "trucks": "Camions",
+  "drivers": "Chauffeurs",
+  "customers": "Clients",
+  "warehouses": "Entrepôts",
+  "shipments": "Livraisons",
+  "tracking": "Suivi des livraisons",
+  "maintenance": "Maintenance",
+  "notifications": "Notifications",
+  "reports": "Rapports",
+  "design": "Design",
     "design.colors": "Color System",
     "design.icons": "Material Icons",
+    
     "material": "Material",
     "material.form-controls": "Form Controls",
     "material.form-controls.autocomplete": "Autocomplete",
