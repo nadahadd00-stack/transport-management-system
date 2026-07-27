@@ -1,0 +1,106 @@
+.trucks-page {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0.5rem 0 0;
+    color: #666;
+  }
+
+  button {
+    flex-shrink: 0;
+  }
+}
+
+.search-field {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 1rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.trucks-table {
+  width: 100%;
+  min-width: 900px;
+}
+
+th.mat-mdc-header-cell {
+  font-weight: 700;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-available {
+  color: #137333;
+  background: #e6f4ea;
+}
+
+.status-assigned {
+  color: #174ea6;
+  background: #e8f0fe;
+}
+
+.status-maintenance {
+  color: #b06000;
+  background: #fef7e0;
+}
+
+.status-out {
+  color: #a50e0e;
+  background: #fce8e6;
+}
+
+.no-data {
+  padding: 2rem;
+  text-align: center;
+  color: #777;
+}
+
+@media (max-width: 768px) {
+  .trucks-page {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .search-field {
+    max-width: 100%;
+  }
+}
+
