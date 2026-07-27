@@ -5,11 +5,168 @@
       <p>Consulter et gérer les camions de la flotte.</p>
     </div>
 
-    <button mat-flat-button color="primary">
-      <mat-icon>add</mat-icon>
-      Ajouter un camion
-    </button>
+    <button mat-flat-button color="primary" (click)="toggleForm()">
+     <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+     {{ showForm ? 'Fermer' : 'Ajouter un camion' }}
+</button>
   </div>
+
+@if (showForm) {
+  <form
+    class="truck-form-card"
+    [formGroup]="truckForm"
+    (ngSubmit)="addTruck()"
+  >
+    <div class="form-header">
+      <div>
+        <h2>Ajouter un camion</h2>
+        <p>Renseignez les informations du nouveau camion.</p>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Immatriculation</mat-label>
+
+        <input
+          matInput
+          formControlName="registrationNumber"
+          placeholder="Exemple : 12345-A-6"
+        />
+
+        @if (
+          truckForm.controls.registrationNumber.touched &&
+          truckForm.controls.registrationNumber.hasError('required')
+        ) {
+          <mat-error>L’immatriculation est obligatoire.</mat-error>
+        }
+
+        @if (
+          truckForm.controls.registrationNumber.touched &&
+          truckForm.controls.registrationNumber.hasError('minlength')
+        ) {
+          <mat-error>
+            L’immatriculation doit contenir au moins 5 caractères.
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Marque</mat-label>
+
+        <input
+          matInput
+          formControlName="brand"
+          placeholder="Exemple : Volvo"
+        />
+
+        @if (
+          truckForm.controls.brand.touched &&
+          truckForm.controls.brand.hasError('required')
+        ) {
+          <mat-error>La marque est obligatoire.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Modèle</mat-label>
+
+        <input
+          matInput
+          formControlName="model"
+          placeholder="Exemple : FH16"
+        />
+
+        @if (
+          truckForm.controls.model.touched &&
+          truckForm.controls.model.hasError('required')
+        ) {
+          <mat-error>Le modèle est obligatoire.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Année de fabrication</mat-label>
+
+        <input
+          matInput
+          type="number"
+          formControlName="manufactureYear"
+        />
+
+        @if (
+          truckForm.controls.manufactureYear.touched &&
+          truckForm.controls.manufactureYear.invalid
+        ) {
+          <mat-error>
+            Veuillez saisir une année valide.
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Capacité en tonnes</mat-label>
+
+        <input
+          matInput
+          type="number"
+          min="1"
+          formControlName="capacity"
+        />
+
+        @if (
+          truckForm.controls.capacity.touched &&
+          truckForm.controls.capacity.invalid
+        ) {
+          <mat-error>
+            La capacité doit être supérieure ou égale à 1.
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Type de carburant</mat-label>
+
+        <mat-select formControlName="fuelType">
+          <mat-option value="Diesel">Diesel</mat-option>
+          <mat-option value="Essence">Essence</mat-option>
+          <mat-option value="Électrique">Électrique</mat-option>
+          <mat-option value="Hybride">Hybride</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Statut</mat-label>
+
+        <mat-select formControlName="status">
+          <mat-option value="Disponible">Disponible</mat-option>
+          <mat-option value="Affecté">Affecté</mat-option>
+          <mat-option value="Maintenance">Maintenance</mat-option>
+          <mat-option value="Hors service">Hors service</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="form-actions">
+      <button
+        mat-button
+        type="button"
+        (click)="toggleForm()"
+      >
+        Annuler
+      </button>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+      >
+        <mat-icon>save</mat-icon>
+        Enregistrer
+      </button>
+    </div>
+  </form>
+}
 
   <mat-form-field appearance="outline" class="search-field">
     <mat-label>Rechercher un camion</mat-label>
