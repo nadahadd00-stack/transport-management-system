@@ -42,6 +42,7 @@ export class Trucks {
   private readonly formBuilder = inject(FormBuilder);
 
   showForm = false;
+  selectedTruck: Truck | null = null;
 
   displayedColumns: string[] = [
     'registrationNumber',
@@ -108,6 +109,7 @@ export class Trucks {
 
   toggleForm(): void {
     this.showForm = !this.showForm;
+    this.selectedTruck = null;
 
     if (!this.showForm) {
       this.resetForm();
@@ -157,7 +159,12 @@ export class Trucks {
   }
 
   viewTruck(truck: Truck): void {
-    console.log('Consulter le camion :', truck);
+    this.selectedTruck = truck;
+    this.showForm = false;
+  }
+
+  closeTruckDetails(): void {
+    this.selectedTruck = null;
   }
 
   editTruck(truck: Truck): void {
