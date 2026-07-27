@@ -43,6 +43,7 @@ export class Trucks {
 
   showForm = false;
   selectedTruck: Truck | null = null;
+  editingTruckId: number | null = null;
 
   displayedColumns: string[] = [
     'registrationNumber',
@@ -108,15 +109,28 @@ export class Trucks {
   });
 
   toggleForm(): void {
-    this.showForm = !this.showForm;
-    this.selectedTruck = null;
-
-    if (!this.showForm) {
-      this.resetForm();
+    if (this.showForm) {
+      this.closeForm();
+      return;
     }
+
+    this.openAddForm();
   }
 
-  addTruck(): void {
+  openAddForm(): void {
+    this.editingTruckId = null;
+    this.selectedTruck = null;
+    this.resetForm();
+    this.showForm = true;
+  }
+
+  closeForm(): void {
+    this.showForm = false;
+    this.editingTruckId = null;
+    this.resetForm();
+  }
+
+  saveTruck(): void {
     if (this.truckForm.invalid) {
       this.truckForm.markAllAsTouched();
       return;
@@ -127,8 +141,9 @@ export class Trucks {
 
     const registrationAlreadyExists = this.dataSource.data.some(
       truck =>
+        truck.id !== this.editingTruckId &&
         truck.registrationNumber.toLowerCase() ===
-        registrationNumber.toLowerCase()
+          registrationNumber.toLowerCase()
     );
 
     if (registrationAlreadyExists) {
@@ -136,8 +151,7 @@ export class Trucks {
       return;
     }
 
-    const newTruck: Truck = {
-      id: this.getNextId(),
+    const truckData: Omit<Truck, 'id'> = {
       registrationNumber,
       brand: formValue.brand.trim(),
       model: formValue.model.trim(),
@@ -147,10 +161,25 @@ export class Trucks {
       status: formValue.status as Truck['status'],
     };
 
-    this.dataSource.data = [...this.dataSource.data, newTruck];
+    if (this.editingTruckId !== null) {
+      this.dataSource.data = this.dataSource.data.map(truck =>
+        truck.id === this.editingTruckId
+          ? {
+              id: truck.id,
+              ...truckData,
+            }
+          : truck
+      );
+    } else {
+      const newTruck: Truck = {
+        id: this.getNextId(),
+        ...truckData,
+      };
 
-    this.resetForm();
-    this.showForm = false;
+      this.dataSource.data = [...this.dataSource.data, newTruck];
+    }
+
+    this.closeForm();
   }
 
   applyFilter(event: Event): void {
@@ -161,6 +190,7 @@ export class Trucks {
   viewTruck(truck: Truck): void {
     this.selectedTruck = truck;
     this.showForm = false;
+    this.editingTruckId = null;
   }
 
   closeTruckDetails(): void {
@@ -168,7 +198,19 @@ export class Trucks {
   }
 
   editTruck(truck: Truck): void {
-    console.log('Modifier le camion :', truck);
+    this.selectedTruck = null;
+    this.editingTruckId = truck.id;
+    this.showForm = true;
+
+    this.truckForm.setValue({
+      registrationNumber: truck.registrationNumber,
+      brand: truck.brand,
+      model: truck.model,
+      manufactureYear: truck.manufactureYear,
+      capacity: truck.capacity,
+      fuelType: truck.fuelType,
+      status: truck.status,
+    });
   }
 
   deleteTruck(truck: Truck): void {

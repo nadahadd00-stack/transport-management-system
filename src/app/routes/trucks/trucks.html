@@ -7,6 +7,7 @@
 
     <button mat-flat-button color="primary" (click)="toggleForm()">
       <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+
       {{ showForm ? 'Fermer' : 'Ajouter un camion' }}
     </button>
   </div>
@@ -15,11 +16,20 @@
     <form
       class="truck-form-card"
       [formGroup]="truckForm"
-      (ngSubmit)="addTruck()"
+      (ngSubmit)="saveTruck()"
     >
       <div class="form-header">
-        <h2>Ajouter un camion</h2>
-        <p>Renseignez les informations du nouveau camion.</p>
+        <h2>
+          {{ editingTruckId !== null ? 'Modifier le camion' : 'Ajouter un camion' }}
+        </h2>
+
+        <p>
+          {{
+            editingTruckId !== null
+              ? 'Modifiez les informations du camion.'
+              : 'Renseignez les informations du nouveau camion.'
+          }}
+        </p>
       </div>
 
       <div class="form-grid">
@@ -155,7 +165,7 @@
         <button
           mat-button
           type="button"
-          (click)="toggleForm()"
+          (click)="closeForm()"
         >
           Annuler
         </button>
@@ -166,7 +176,12 @@
           type="submit"
         >
           <mat-icon>save</mat-icon>
-          Enregistrer
+
+          {{
+            editingTruckId !== null
+              ? 'Enregistrer les modifications'
+              : 'Enregistrer'
+          }}
         </button>
       </div>
     </form>
