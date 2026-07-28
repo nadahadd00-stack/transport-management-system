@@ -1,0 +1,403 @@
+<div class="reports-page">
+  <div class="page-header">
+    <div>
+      <h1>Rapports et statistiques</h1>
+      <p>
+        Analyser les performances des expéditions, de la flotte et de la
+        maintenance.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        matTooltip="Exporter le rapport au format CSV"
+        (click)="exportCsv()"
+      >
+        <mat-icon>download</mat-icon>
+        Exporter CSV
+      </button>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        matTooltip="Imprimer le rapport"
+        (click)="printReport()"
+      >
+        <mat-icon>print</mat-icon>
+        Imprimer
+      </button>
+    </div>
+  </div>
+
+  <form
+    class="report-filter-card"
+    [formGroup]="reportForm"
+    (ngSubmit)="generateReport()"
+  >
+    <div class="filter-content">
+      <div>
+        <h2>Générer un rapport</h2>
+        <p>Sélectionnez la période à analyser.</p>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Période</mat-label>
+
+        <mat-select formControlName="period">
+          @for (period of periods; track period) {
+            <mat-option [value]="period">
+              {{ period }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit">
+        <mat-icon>analytics</mat-icon>
+        Générer
+      </button>
+    </div>
+
+    <div class="report-information">
+      <span>
+        <mat-icon>date_range</mat-icon>
+        Rapport : <strong>{{ generatedPeriod }}</strong>
+      </span>
+
+      <span>
+        <mat-icon>schedule</mat-icon>
+        Dernière génération :
+        <strong>{{ lastGeneratedAt }}</strong>
+      </span>
+    </div>
+  </form>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon shipments-icon">
+        <mat-icon>local_shipping</mat-icon>
+      </div>
+
+      <div>
+        <span>Total des expéditions</span>
+        <strong>{{ currentMetrics.totalShipments }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon delivered-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+
+      <div>
+        <span>Expéditions livrées</span>
+        <strong>{{ currentMetrics.deliveredShipments }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon transit-icon">
+        <mat-icon>route</mat-icon>
+      </div>
+
+      <div>
+        <span>Expéditions en transit</span>
+        <strong>{{ currentMetrics.inTransitShipments }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon delayed-icon">
+        <mat-icon>warning</mat-icon>
+      </div>
+
+      <div>
+        <span>Expéditions retardées</span>
+        <strong>{{ currentMetrics.delayedShipments }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon cancelled-icon">
+        <mat-icon>cancel</mat-icon>
+      </div>
+
+      <div>
+        <span>Expéditions annulées</span>
+        <strong>{{ currentMetrics.cancelledShipments }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon revenue-icon">
+        <mat-icon>payments</mat-icon>
+      </div>
+
+      <div>
+        <span>Chiffre d’affaires</span>
+        <strong>{{ formatMoney(totalRevenue) }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon maintenance-icon">
+        <mat-icon>build</mat-icon>
+      </div>
+
+      <div>
+        <span>Coût de maintenance</span>
+        <strong>
+          {{ formatMoney(currentMetrics.maintenanceCost) }}
+        </strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon drivers-icon">
+        <mat-icon>person</mat-icon>
+      </div>
+
+      <div>
+        <span>Chauffeurs disponibles</span>
+        <strong>{{ currentMetrics.availableDrivers }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="performance-overview">
+    <div class="performance-card">
+      <div class="performance-header">
+        <div>
+          <span>Taux de livraison</span>
+          <strong>{{ deliveryRate }} %</strong>
+        </div>
+
+        <mat-icon>task_alt</mat-icon>
+      </div>
+
+      <mat-progress-bar
+        mode="determinate"
+        [value]="deliveryRate"
+      ></mat-progress-bar>
+
+      <p>
+        {{ currentMetrics.deliveredShipments }} expéditions livrées sur
+        {{ currentMetrics.totalShipments }}.
+      </p>
+    </div>
+
+    <div class="performance-card">
+      <div class="performance-header">
+        <div>
+          <span>Disponibilité de la flotte</span>
+          <strong>{{ fleetAvailabilityRate }} %</strong>
+        </div>
+
+        <mat-icon>local_shipping</mat-icon>
+      </div>
+
+      <mat-progress-bar
+        mode="determinate"
+        [value]="fleetAvailabilityRate"
+      ></mat-progress-bar>
+
+      <p>
+        {{ currentMetrics.activeTrucks }} camions actifs sur
+        {{ currentMetrics.totalTrucks }}.
+      </p>
+    </div>
+  </div>
+
+  <section class="report-section">
+    <div class="section-header">
+      <div>
+        <h2>Performance des expéditions</h2>
+        <p>
+          Évolution des livraisons, retards et revenus par période.
+        </p>
+      </div>
+
+      <mat-icon>bar_chart</mat-icon>
+    </div>
+
+    <div class="table-container">
+      <table
+        mat-table
+        [dataSource]="performanceDataSource"
+        class="reports-table"
+      >
+        <ng-container matColumnDef="period">
+          <th mat-header-cell *matHeaderCellDef>
+            Période
+          </th>
+
+          <td mat-cell *matCellDef="let record">
+            {{ record.period }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="shipments">
+          <th mat-header-cell *matHeaderCellDef>
+            Expéditions
+          </th>
+
+          <td mat-cell *matCellDef="let record">
+            {{ record.shipments }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="delivered">
+          <th mat-header-cell *matHeaderCellDef>
+            Livrées
+          </th>
+
+          <td mat-cell *matCellDef="let record">
+            <span class="value-badge delivered-value">
+              {{ record.delivered }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="delayed">
+          <th mat-header-cell *matHeaderCellDef>
+            Retardées
+          </th>
+
+          <td mat-cell *matCellDef="let record">
+            <span class="value-badge delayed-value">
+              {{ record.delayed }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="revenue">
+          <th mat-header-cell *matHeaderCellDef>
+            Chiffre d’affaires
+          </th>
+
+          <td mat-cell *matCellDef="let record">
+            <strong>{{ formatMoney(record.revenue) }}</strong>
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="performanceDisplayedColumns"
+        ></tr>
+
+        <tr
+          mat-row
+          *matRowDef="
+            let row;
+            columns: performanceDisplayedColumns
+          "
+        ></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td
+            class="mat-cell no-data"
+            [attr.colspan]="performanceDisplayedColumns.length"
+          >
+            Aucune donnée de performance disponible.
+          </td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <div class="section-header">
+      <div>
+        <h2>Performance par trajet</h2>
+        <p>
+          Analyse des trajets les plus utilisés et de leur taux de livraison.
+        </p>
+      </div>
+
+      <mat-icon>alt_route</mat-icon>
+    </div>
+
+    <div class="table-container">
+      <table
+        mat-table
+        [dataSource]="routesDataSource"
+        class="reports-table routes-table"
+      >
+        <ng-container matColumnDef="route">
+          <th mat-header-cell *matHeaderCellDef>
+            Trajet
+          </th>
+
+          <td mat-cell *matCellDef="let route">
+            <div class="route-cell">
+              <mat-icon>location_on</mat-icon>
+              <strong>{{ route.route }}</strong>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="shipments">
+          <th mat-header-cell *matHeaderCellDef>
+            Expéditions
+          </th>
+
+          <td mat-cell *matCellDef="let route">
+            {{ route.shipments }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="averageDuration">
+          <th mat-header-cell *matHeaderCellDef>
+            Durée moyenne
+          </th>
+
+          <td mat-cell *matCellDef="let route">
+            {{ route.averageDuration }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="deliveryRate">
+          <th mat-header-cell *matHeaderCellDef>
+            Taux de livraison
+          </th>
+
+          <td mat-cell *matCellDef="let route">
+            <div class="rate-cell">
+              <span>{{ route.deliveryRate }} %</span>
+
+              <mat-progress-bar
+                mode="determinate"
+                [value]="route.deliveryRate"
+              ></mat-progress-bar>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="routesDisplayedColumns"
+        ></tr>
+
+        <tr
+          mat-row
+          *matRowDef="
+            let row;
+            columns: routesDisplayedColumns
+          "
+        ></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td
+            class="mat-cell no-data"
+            [attr.colspan]="routesDisplayedColumns.length"
+          >
+            Aucun trajet disponible.
+          </td>
+        </tr>
+      </table>
+    </div>
+  </section>
+</div>
