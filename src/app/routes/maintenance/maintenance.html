@@ -1,0 +1,519 @@
+<div class="maintenance-page">
+  <div class="page-header">
+    <div>
+      <h1>Gestion de la maintenance</h1>
+      <p>Planifier et suivre les opérations de maintenance des camions.</p>
+    </div>
+
+    <button mat-flat-button color="primary" (click)="toggleForm()">
+      <mat-icon>{{ showForm ? 'close' : 'build' }}</mat-icon>
+
+      {{ showForm ? 'Fermer' : 'Ajouter une maintenance' }}
+    </button>
+  </div>
+
+  @if (showForm) {
+    <form
+      class="maintenance-form-card"
+      [formGroup]="maintenanceForm"
+      (ngSubmit)="saveMaintenance()"
+    >
+      <div class="form-header">
+        <h2>
+          {{
+            editingMaintenanceId !== null
+              ? 'Modifier la maintenance'
+              : 'Ajouter une maintenance'
+          }}
+        </h2>
+
+        <p>
+          {{
+            editingMaintenanceId !== null
+              ? 'Modifiez les informations de la maintenance.'
+              : 'Renseignez les informations de la nouvelle maintenance.'
+          }}
+        </p>
+      </div>
+
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Camion</mat-label>
+
+          <mat-select formControlName="truck">
+            <mat-option value="12345-A-6">
+              12345-A-6
+            </mat-option>
+
+            <mat-option value="67890-B-7">
+              67890-B-7
+            </mat-option>
+
+            <mat-option value="11223-C-8">
+              11223-C-8
+            </mat-option>
+          </mat-select>
+
+          @if (
+            maintenanceForm.controls.truck.touched &&
+            maintenanceForm.controls.truck.hasError('required')
+          ) {
+            <mat-error>
+              Le camion est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Type de maintenance</mat-label>
+
+          <mat-select formControlName="maintenanceType">
+            <mat-option value="Vidange">
+              Vidange
+            </mat-option>
+
+            <mat-option value="Freinage">
+              Freinage
+            </mat-option>
+
+            <mat-option value="Pneumatiques">
+              Pneumatiques
+            </mat-option>
+
+            <mat-option value="Moteur">
+              Moteur
+            </mat-option>
+
+            <mat-option value="Électricité">
+              Électricité
+            </mat-option>
+
+            <mat-option value="Contrôle général">
+              Contrôle général
+            </mat-option>
+          </mat-select>
+
+          @if (
+            maintenanceForm.controls.maintenanceType.touched &&
+            maintenanceForm.controls.maintenanceType.hasError('required')
+          ) {
+            <mat-error>
+              Le type de maintenance est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date prévue</mat-label>
+
+          <input
+            matInput
+            type="date"
+            formControlName="scheduledDate"
+          />
+
+          @if (
+            maintenanceForm.controls.scheduledDate.touched &&
+            maintenanceForm.controls.scheduledDate.hasError('required')
+          ) {
+            <mat-error>
+              La date prévue est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Kilométrage</mat-label>
+
+          <input
+            matInput
+            type="number"
+            min="0"
+            formControlName="mileage"
+            placeholder="Exemple : 85000"
+          />
+
+          @if (
+            maintenanceForm.controls.mileage.touched &&
+            maintenanceForm.controls.mileage.hasError('required')
+          ) {
+            <mat-error>
+              Le kilométrage est obligatoire.
+            </mat-error>
+          }
+
+          @if (
+            maintenanceForm.controls.mileage.touched &&
+            maintenanceForm.controls.mileage.hasError('min')
+          ) {
+            <mat-error>
+              Le kilométrage ne peut pas être négatif.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Coût en MAD</mat-label>
+
+          <input
+            matInput
+            type="number"
+            min="0"
+            formControlName="cost"
+            placeholder="Exemple : 1200"
+          />
+
+          @if (
+            maintenanceForm.controls.cost.touched &&
+            maintenanceForm.controls.cost.hasError('required')
+          ) {
+            <mat-error>
+              Le coût est obligatoire.
+            </mat-error>
+          }
+
+          @if (
+            maintenanceForm.controls.cost.touched &&
+            maintenanceForm.controls.cost.hasError('min')
+          ) {
+            <mat-error>
+              Le coût ne peut pas être négatif.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Garage ou atelier</mat-label>
+
+          <input
+            matInput
+            formControlName="workshop"
+            placeholder="Exemple : Garage Atlas"
+          />
+
+          @if (
+            maintenanceForm.controls.workshop.touched &&
+            maintenanceForm.controls.workshop.hasError('required')
+          ) {
+            <mat-error>
+              Le garage ou l’atelier est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+
+          <mat-select formControlName="status">
+            <mat-option value="Planifiée">
+              Planifiée
+            </mat-option>
+
+            <mat-option value="En cours">
+              En cours
+            </mat-option>
+
+            <mat-option value="Terminée">
+              Terminée
+            </mat-option>
+
+            <mat-option value="Annulée">
+              Annulée
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="description-field">
+          <mat-label>Description</mat-label>
+
+          <textarea
+            matInput
+            rows="4"
+            formControlName="description"
+            placeholder="Décrivez l’intervention à réaliser..."
+          ></textarea>
+
+          @if (
+            maintenanceForm.controls.description.touched &&
+            maintenanceForm.controls.description.hasError('required')
+          ) {
+            <mat-error>
+              La description est obligatoire.
+            </mat-error>
+          }
+
+          @if (
+            maintenanceForm.controls.description.touched &&
+            maintenanceForm.controls.description.hasError('minlength')
+          ) {
+            <mat-error>
+              La description doit contenir au moins 5 caractères.
+            </mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="closeForm()"
+        >
+          Annuler
+        </button>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+        >
+          <mat-icon>save</mat-icon>
+
+          {{
+            editingMaintenanceId !== null
+              ? 'Enregistrer les modifications'
+              : 'Enregistrer'
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (selectedMaintenance) {
+    <div class="maintenance-details-card">
+      <div class="details-header">
+        <div>
+          <h2>Détails de la maintenance</h2>
+          <p>
+            {{ selectedMaintenance.truck }} —
+            {{ selectedMaintenance.maintenanceType }}
+          </p>
+        </div>
+
+        <button
+          mat-icon-button
+          matTooltip="Fermer"
+          (click)="closeMaintenanceDetails()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span>Camion</span>
+          <strong>{{ selectedMaintenance.truck }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Type de maintenance</span>
+          <strong>{{ selectedMaintenance.maintenanceType }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Date prévue</span>
+          <strong>{{ selectedMaintenance.scheduledDate }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Kilométrage</span>
+          <strong>{{ selectedMaintenance.mileage }} km</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Coût</span>
+          <strong>{{ selectedMaintenance.cost }} MAD</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Garage ou atelier</span>
+          <strong>{{ selectedMaintenance.workshop }}</strong>
+        </div>
+
+        <div class="detail-item description-detail">
+          <span>Description</span>
+          <strong>{{ selectedMaintenance.description }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Statut</span>
+
+          <strong
+            class="status-badge"
+            [class.status-planned]="
+              selectedMaintenance.status === 'Planifiée'
+            "
+            [class.status-progress]="
+              selectedMaintenance.status === 'En cours'
+            "
+            [class.status-completed]="
+              selectedMaintenance.status === 'Terminée'
+            "
+            [class.status-cancelled]="
+              selectedMaintenance.status === 'Annulée'
+            "
+          >
+            {{ selectedMaintenance.status }}
+          </strong>
+        </div>
+      </div>
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Rechercher une maintenance</mat-label>
+
+    <input
+      matInput
+      placeholder="Camion, type, garage, statut..."
+      (keyup)="applyFilter($event)"
+    />
+
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      class="maintenance-table"
+    >
+      <ng-container matColumnDef="truck">
+        <th mat-header-cell *matHeaderCellDef>
+          Camion
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          {{ maintenance.truck }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="maintenanceType">
+        <th mat-header-cell *matHeaderCellDef>
+          Type
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          {{ maintenance.maintenanceType }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="scheduledDate">
+        <th mat-header-cell *matHeaderCellDef>
+          Date prévue
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          {{ maintenance.scheduledDate }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="mileage">
+        <th mat-header-cell *matHeaderCellDef>
+          Kilométrage
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          {{ maintenance.mileage }} km
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cost">
+        <th mat-header-cell *matHeaderCellDef>
+          Coût
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          {{ maintenance.cost }} MAD
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="workshop">
+        <th mat-header-cell *matHeaderCellDef>
+          Garage
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          {{ maintenance.workshop }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>
+          Statut
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance">
+          <span
+            class="status-badge"
+            [class.status-planned]="
+              maintenance.status === 'Planifiée'
+            "
+            [class.status-progress]="
+              maintenance.status === 'En cours'
+            "
+            [class.status-completed]="
+              maintenance.status === 'Terminée'
+            "
+            [class.status-cancelled]="
+              maintenance.status === 'Annulée'
+            "
+          >
+            {{ maintenance.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          Actions
+        </th>
+
+        <td mat-cell *matCellDef="let maintenance" class="actions-cell">
+          <button
+            mat-icon-button
+            matTooltip="Consulter"
+            (click)="viewMaintenance(maintenance)"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            matTooltip="Modifier"
+            (click)="editMaintenance(maintenance)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            matTooltip="Supprimer"
+            (click)="deleteMaintenance(maintenance)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr
+        mat-header-row
+        *matHeaderRowDef="displayedColumns"
+      ></tr>
+
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+      ></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td
+          class="mat-cell no-data"
+          [attr.colspan]="displayedColumns.length"
+        >
+          Aucune maintenance trouvée.
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>

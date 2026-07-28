@@ -6,6 +6,7 @@ import { AuthLayout } from '@theme/auth-layout/auth-layout';
 import { Customers } from './routes/customers/customers';
 import { Dashboard } from './routes/dashboard/dashboard';
 import { Drivers } from './routes/drivers/drivers';
+import { Maintenance } from './routes/maintenance/maintenance';
 import { Error403 } from './routes/sessions/error-403';
 import { Error404 } from './routes/sessions/error-404';
 import { Error500 } from './routes/sessions/error-500';
@@ -32,6 +33,7 @@ export const routes: Routes = [
       { path: 'warehouses', component: Warehouses },
       { path: 'shipments', component: Shipments },
       { path: 'tracking', component: Tracking },
+      { path: 'maintenance', component: Maintenance },
 
       { path: '403', component: Error403 },
       { path: '404', component: Error404 },
