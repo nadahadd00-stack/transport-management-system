@@ -12,6 +12,7 @@ import { Error500 } from './routes/sessions/error-500';
 import { Login } from './routes/sessions/login/login';
 import { Register } from './routes/sessions/register/register';
 import { Trucks } from './routes/trucks/trucks';
+import { Warehouses } from './routes/warehouses/warehouses';
 
 export const routes: Routes = [
   {
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'trucks', component: Trucks },
       { path: 'drivers', component: Drivers },
       { path: 'customers', component: Customers },
+      { path: 'warehouses', component: Warehouses },
 
       { path: '403', component: Error403 },
       { path: '404', component: Error404 },
