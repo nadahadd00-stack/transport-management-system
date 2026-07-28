@@ -1,0 +1,539 @@
+
+<div class="tracking-page">
+  <div class="page-header">
+    <div>
+      <h1>Suivi des expéditions</h1>
+      <p>Suivre l’avancement et la localisation des expéditions.</p>
+    </div>
+
+    <button mat-flat-button color="primary" (click)="toggleForm()">
+      <mat-icon>{{ showForm ? 'close' : 'add_location_alt' }}</mat-icon>
+
+      {{ showForm ? 'Fermer' : 'Ajouter un suivi' }}
+    </button>
+  </div>
+
+  @if (showForm) {
+    <form
+      class="tracking-form-card"
+      [formGroup]="trackingForm"
+      (ngSubmit)="saveTracking()"
+    >
+      <div class="form-header">
+        <h2>
+          {{
+            editingTrackingId !== null
+              ? 'Modifier le suivi'
+              : 'Ajouter un suivi'
+          }}
+        </h2>
+
+        <p>
+          {{
+            editingTrackingId !== null
+              ? 'Modifiez les informations de suivi.'
+              : 'Renseignez les informations du nouveau suivi.'
+          }}
+        </p>
+      </div>
+
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Référence de l’expédition</mat-label>
+
+          <mat-select formControlName="shipmentReference">
+            <mat-option value="EXP-2026-001">
+              EXP-2026-001
+            </mat-option>
+
+            <mat-option value="EXP-2026-002">
+              EXP-2026-002
+            </mat-option>
+
+            <mat-option value="EXP-2026-003">
+              EXP-2026-003
+            </mat-option>
+
+            <mat-option value="EXP-2026-004">
+              EXP-2026-004
+            </mat-option>
+          </mat-select>
+
+          @if (
+            trackingForm.controls.shipmentReference.touched &&
+            trackingForm.controls.shipmentReference.hasError('required')
+          ) {
+            <mat-error>
+              La référence de l’expédition est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Camion</mat-label>
+
+          <mat-select formControlName="truck">
+            <mat-option value="12345-A-6">
+              12345-A-6
+            </mat-option>
+
+            <mat-option value="67890-B-7">
+              67890-B-7
+            </mat-option>
+
+            <mat-option value="11223-C-8">
+              11223-C-8
+            </mat-option>
+          </mat-select>
+
+          @if (
+            trackingForm.controls.truck.touched &&
+            trackingForm.controls.truck.hasError('required')
+          ) {
+            <mat-error>
+              Le camion est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Chauffeur</mat-label>
+
+          <mat-select formControlName="driver">
+            <mat-option value="Youssef El Amrani">
+              Youssef El Amrani
+            </mat-option>
+
+            <mat-option value="Hamza Benali">
+              Hamza Benali
+            </mat-option>
+
+            <mat-option value="Omar Alaoui">
+              Omar Alaoui
+            </mat-option>
+          </mat-select>
+
+          @if (
+            trackingForm.controls.driver.touched &&
+            trackingForm.controls.driver.hasError('required')
+          ) {
+            <mat-error>
+              Le chauffeur est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ville de départ</mat-label>
+
+          <input
+            matInput
+            formControlName="origin"
+            placeholder="Exemple : Casablanca"
+          />
+
+          @if (
+            trackingForm.controls.origin.touched &&
+            trackingForm.controls.origin.hasError('required')
+          ) {
+            <mat-error>
+              La ville de départ est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ville de destination</mat-label>
+
+          <input
+            matInput
+            formControlName="destination"
+            placeholder="Exemple : Rabat"
+          />
+
+          @if (
+            trackingForm.controls.destination.touched &&
+            trackingForm.controls.destination.hasError('required')
+          ) {
+            <mat-error>
+              La ville de destination est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Localisation actuelle</mat-label>
+
+          <input
+            matInput
+            formControlName="currentLocation"
+            placeholder="Exemple : Settat"
+          />
+
+          @if (
+            trackingForm.controls.currentLocation.touched &&
+            trackingForm.controls.currentLocation.hasError('required')
+          ) {
+            <mat-error>
+              La localisation actuelle est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Progression en pourcentage</mat-label>
+
+          <input
+            matInput
+            type="number"
+            min="0"
+            max="100"
+            formControlName="progress"
+            placeholder="Exemple : 50"
+          />
+
+          @if (
+            trackingForm.controls.progress.touched &&
+            trackingForm.controls.progress.hasError('required')
+          ) {
+            <mat-error>
+              La progression est obligatoire.
+            </mat-error>
+          }
+
+          @if (
+            trackingForm.controls.progress.touched &&
+            (
+              trackingForm.controls.progress.hasError('min') ||
+              trackingForm.controls.progress.hasError('max')
+            )
+          ) {
+            <mat-error>
+              La progression doit être comprise entre 0 et 100.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Dernière mise à jour</mat-label>
+
+          <input
+            matInput
+            type="datetime-local"
+            formControlName="lastUpdate"
+          />
+
+          @if (
+            trackingForm.controls.lastUpdate.touched &&
+            trackingForm.controls.lastUpdate.hasError('required')
+          ) {
+            <mat-error>
+              La date de mise à jour est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+
+          <mat-select formControlName="status">
+            <mat-option value="En attente">
+              En attente
+            </mat-option>
+
+            <mat-option value="En route">
+              En route
+            </mat-option>
+
+            <mat-option value="Livrée">
+              Livrée
+            </mat-option>
+
+            <mat-option value="Retardée">
+              Retardée
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="closeForm()"
+        >
+          Annuler
+        </button>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+        >
+          <mat-icon>save</mat-icon>
+
+          {{
+            editingTrackingId !== null
+              ? 'Enregistrer les modifications'
+              : 'Enregistrer'
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (selectedTracking) {
+    <div class="tracking-details-card">
+      <div class="details-header">
+        <div>
+          <h2>Détails du suivi</h2>
+          <p>{{ selectedTracking.shipmentReference }}</p>
+        </div>
+
+        <button
+          mat-icon-button
+          matTooltip="Fermer"
+          (click)="closeTrackingDetails()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span>Expédition</span>
+          <strong>{{ selectedTracking.shipmentReference }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Camion</span>
+          <strong>{{ selectedTracking.truck }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Chauffeur</span>
+          <strong>{{ selectedTracking.driver }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Départ</span>
+          <strong>{{ selectedTracking.origin }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Destination</span>
+          <strong>{{ selectedTracking.destination }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Localisation actuelle</span>
+          <strong>{{ selectedTracking.currentLocation }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Dernière mise à jour</span>
+          <strong>{{ selectedTracking.lastUpdate }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Progression</span>
+
+          <div class="progress-details">
+            <strong>{{ selectedTracking.progress }} %</strong>
+
+            <mat-progress-bar
+              mode="determinate"
+              [value]="selectedTracking.progress"
+            ></mat-progress-bar>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <span>Statut</span>
+
+          <strong
+            class="status-badge"
+            [class.status-waiting]="
+              selectedTracking.status === 'En attente'
+            "
+            [class.status-route]="
+              selectedTracking.status === 'En route'
+            "
+            [class.status-delivered]="
+              selectedTracking.status === 'Livrée'
+            "
+            [class.status-delayed]="
+              selectedTracking.status === 'Retardée'
+            "
+          >
+            {{ selectedTracking.status }}
+          </strong>
+        </div>
+      </div>
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Rechercher un suivi</mat-label>
+
+    <input
+      matInput
+      placeholder="Référence, camion, chauffeur, ville..."
+      (keyup)="applyFilter($event)"
+    />
+
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      class="tracking-table"
+    >
+      <ng-container matColumnDef="shipmentReference">
+        <th mat-header-cell *matHeaderCellDef>
+          Expédition
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          {{ tracking.shipmentReference }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="truck">
+        <th mat-header-cell *matHeaderCellDef>
+          Camion
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          {{ tracking.truck }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="driver">
+        <th mat-header-cell *matHeaderCellDef>
+          Chauffeur
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          {{ tracking.driver }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="route">
+        <th mat-header-cell *matHeaderCellDef>
+          Trajet
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          {{ tracking.origin }} → {{ tracking.destination }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="currentLocation">
+        <th mat-header-cell *matHeaderCellDef>
+          Localisation actuelle
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          {{ tracking.currentLocation }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="progress">
+        <th mat-header-cell *matHeaderCellDef>
+          Progression
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          <div class="progress-cell">
+            <span>{{ tracking.progress }} %</span>
+
+            <mat-progress-bar
+              mode="determinate"
+              [value]="tracking.progress"
+            ></mat-progress-bar>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>
+          Statut
+        </th>
+
+        <td mat-cell *matCellDef="let tracking">
+          <span
+            class="status-badge"
+            [class.status-waiting]="
+              tracking.status === 'En attente'
+            "
+            [class.status-route]="
+              tracking.status === 'En route'
+            "
+            [class.status-delivered]="
+              tracking.status === 'Livrée'
+            "
+            [class.status-delayed]="
+              tracking.status === 'Retardée'
+            "
+          >
+            {{ tracking.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          Actions
+        </th>
+
+        <td mat-cell *matCellDef="let tracking" class="actions-cell">
+          <button
+            mat-icon-button
+            matTooltip="Consulter"
+            (click)="viewTracking(tracking)"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            matTooltip="Modifier"
+            (click)="editTracking(tracking)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            matTooltip="Supprimer"
+            (click)="deleteTracking(tracking)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr
+        mat-header-row
+        *matHeaderRowDef="displayedColumns"
+      ></tr>
+
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+      ></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td
+          class="mat-cell no-data"
+          [attr.colspan]="displayedColumns.length"
+        >
+          Aucun suivi trouvé.
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
