@@ -214,8 +214,26 @@ export class Trucks {
   }
 
   deleteTruck(truck: Truck): void {
-    console.log('Supprimer le camion :', truck);
+  const confirmation = confirm(
+    `Voulez-vous vraiment supprimer le camion ${truck.registrationNumber} ?`
+  );
+
+  if (!confirmation) {
+    return;
   }
+
+  this.dataSource.data = this.dataSource.data.filter(
+    currentTruck => currentTruck.id !== truck.id
+  );
+
+  if (this.selectedTruck?.id === truck.id) {
+    this.selectedTruck = null;
+  }
+
+  if (this.editingTruckId === truck.id) {
+    this.closeForm();
+  }
+}
 
   private getNextId(): number {
     const ids = this.dataSource.data.map(truck => truck.id);
