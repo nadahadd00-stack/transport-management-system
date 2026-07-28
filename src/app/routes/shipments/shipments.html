@@ -1,0 +1,513 @@
+<div class="shipments-page">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des expéditions</h1>
+      <p>Consulter et gérer les opérations de transport.</p>
+    </div>
+
+    <button mat-flat-button color="primary" (click)="toggleForm()">
+      <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+
+      {{ showForm ? 'Fermer' : 'Ajouter une expédition' }}
+    </button>
+  </div>
+
+  @if (showForm) {
+    <form
+      class="shipment-form-card"
+      [formGroup]="shipmentForm"
+      (ngSubmit)="saveShipment()"
+    >
+      <div class="form-header">
+        <h2>
+          {{
+            editingShipmentId !== null
+              ? 'Modifier l’expédition'
+              : 'Ajouter une expédition'
+          }}
+        </h2>
+
+        <p>
+          {{
+            editingShipmentId !== null
+              ? 'Modifiez les informations de l’expédition.'
+              : 'Renseignez les informations de la nouvelle expédition.'
+          }}
+        </p>
+      </div>
+
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Référence</mat-label>
+
+          <input
+            matInput
+            formControlName="reference"
+            placeholder="Exemple : EXP-2026-004"
+          />
+
+          @if (
+            shipmentForm.controls.reference.touched &&
+            shipmentForm.controls.reference.hasError('required')
+          ) {
+            <mat-error>
+              La référence est obligatoire.
+            </mat-error>
+          }
+
+          @if (
+            shipmentForm.controls.reference.touched &&
+            shipmentForm.controls.reference.hasError('minlength')
+          ) {
+            <mat-error>
+              La référence doit contenir au moins 4 caractères.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Client</mat-label>
+
+          <mat-select formControlName="customer">
+            <mat-option value="Atlas Distribution">
+              Atlas Distribution
+            </mat-option>
+
+            <mat-option value="Marrakech Logistics">
+              Marrakech Logistics
+            </mat-option>
+
+            <mat-option value="Tanger Import">
+              Tanger Import
+            </mat-option>
+          </mat-select>
+
+          @if (
+            shipmentForm.controls.customer.touched &&
+            shipmentForm.controls.customer.hasError('required')
+          ) {
+            <mat-error>
+              Le client est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ville de départ</mat-label>
+
+          <input
+            matInput
+            formControlName="origin"
+            placeholder="Exemple : Casablanca"
+          />
+
+          @if (
+            shipmentForm.controls.origin.touched &&
+            shipmentForm.controls.origin.hasError('required')
+          ) {
+            <mat-error>
+              La ville de départ est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ville de destination</mat-label>
+
+          <input
+            matInput
+            formControlName="destination"
+            placeholder="Exemple : Rabat"
+          />
+
+          @if (
+            shipmentForm.controls.destination.touched &&
+            shipmentForm.controls.destination.hasError('required')
+          ) {
+            <mat-error>
+              La ville de destination est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date de départ</mat-label>
+
+          <input
+            matInput
+            type="date"
+            formControlName="departureDate"
+          />
+
+          @if (
+            shipmentForm.controls.departureDate.touched &&
+            shipmentForm.controls.departureDate.hasError('required')
+          ) {
+            <mat-error>
+              La date de départ est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date de livraison prévue</mat-label>
+
+          <input
+            matInput
+            type="date"
+            formControlName="deliveryDate"
+          />
+
+          @if (
+            shipmentForm.controls.deliveryDate.touched &&
+            shipmentForm.controls.deliveryDate.hasError('required')
+          ) {
+            <mat-error>
+              La date de livraison est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Camion</mat-label>
+
+          <mat-select formControlName="truck">
+            <mat-option value="12345-A-6">
+              12345-A-6
+            </mat-option>
+
+            <mat-option value="67890-B-7">
+              67890-B-7
+            </mat-option>
+
+            <mat-option value="11223-C-8">
+              11223-C-8
+            </mat-option>
+          </mat-select>
+
+          @if (
+            shipmentForm.controls.truck.touched &&
+            shipmentForm.controls.truck.hasError('required')
+          ) {
+            <mat-error>
+              Le camion est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Chauffeur</mat-label>
+
+          <mat-select formControlName="driver">
+            <mat-option value="Youssef El Amrani">
+              Youssef El Amrani
+            </mat-option>
+
+            <mat-option value="Hamza Benali">
+              Hamza Benali
+            </mat-option>
+
+            <mat-option value="Omar Alaoui">
+              Omar Alaoui
+            </mat-option>
+          </mat-select>
+
+          @if (
+            shipmentForm.controls.driver.touched &&
+            shipmentForm.controls.driver.hasError('required')
+          ) {
+            <mat-error>
+              Le chauffeur est obligatoire.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+
+          <mat-select formControlName="status">
+            <mat-option value="En préparation">
+              En préparation
+            </mat-option>
+
+            <mat-option value="En transit">
+              En transit
+            </mat-option>
+
+            <mat-option value="Livrée">
+              Livrée
+            </mat-option>
+
+            <mat-option value="Annulée">
+              Annulée
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="closeForm()"
+        >
+          Annuler
+        </button>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+        >
+          <mat-icon>save</mat-icon>
+
+          {{
+            editingShipmentId !== null
+              ? 'Enregistrer les modifications'
+              : 'Enregistrer'
+          }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (selectedShipment) {
+    <div class="shipment-details-card">
+      <div class="details-header">
+        <div>
+          <h2>Détails de l’expédition</h2>
+          <p>{{ selectedShipment.reference }}</p>
+        </div>
+
+        <button
+          mat-icon-button
+          matTooltip="Fermer"
+          (click)="closeShipmentDetails()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span>Référence</span>
+          <strong>{{ selectedShipment.reference }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Client</span>
+          <strong>{{ selectedShipment.customer }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Départ</span>
+          <strong>{{ selectedShipment.origin }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Destination</span>
+          <strong>{{ selectedShipment.destination }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Date de départ</span>
+          <strong>{{ selectedShipment.departureDate }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Date de livraison</span>
+          <strong>{{ selectedShipment.deliveryDate }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Camion</span>
+          <strong>{{ selectedShipment.truck }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Chauffeur</span>
+          <strong>{{ selectedShipment.driver }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Statut</span>
+
+          <strong
+            class="status-badge"
+            [class.status-preparation]="
+              selectedShipment.status === 'En préparation'
+            "
+            [class.status-transit]="
+              selectedShipment.status === 'En transit'
+            "
+            [class.status-delivered]="
+              selectedShipment.status === 'Livrée'
+            "
+            [class.status-cancelled]="
+              selectedShipment.status === 'Annulée'
+            "
+          >
+            {{ selectedShipment.status }}
+          </strong>
+        </div>
+      </div>
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Rechercher une expédition</mat-label>
+
+    <input
+      matInput
+      placeholder="Référence, client, ville, chauffeur..."
+      (keyup)="applyFilter($event)"
+    />
+
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      class="shipments-table"
+    >
+      <ng-container matColumnDef="reference">
+        <th mat-header-cell *matHeaderCellDef>
+          Référence
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          {{ shipment.reference }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="customer">
+        <th mat-header-cell *matHeaderCellDef>
+          Client
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          {{ shipment.customer }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="route">
+        <th mat-header-cell *matHeaderCellDef>
+          Trajet
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          {{ shipment.origin }} → {{ shipment.destination }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="departureDate">
+        <th mat-header-cell *matHeaderCellDef>
+          Date de départ
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          {{ shipment.departureDate }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="truck">
+        <th mat-header-cell *matHeaderCellDef>
+          Camion
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          {{ shipment.truck }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="driver">
+        <th mat-header-cell *matHeaderCellDef>
+          Chauffeur
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          {{ shipment.driver }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>
+          Statut
+        </th>
+
+        <td mat-cell *matCellDef="let shipment">
+          <span
+            class="status-badge"
+            [class.status-preparation]="
+              shipment.status === 'En préparation'
+            "
+            [class.status-transit]="
+              shipment.status === 'En transit'
+            "
+            [class.status-delivered]="
+              shipment.status === 'Livrée'
+            "
+            [class.status-cancelled]="
+              shipment.status === 'Annulée'
+            "
+          >
+            {{ shipment.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          Actions
+        </th>
+
+        <td mat-cell *matCellDef="let shipment" class="actions-cell">
+          <button
+            mat-icon-button
+            matTooltip="Consulter"
+            (click)="viewShipment(shipment)"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            matTooltip="Modifier"
+            (click)="editShipment(shipment)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            matTooltip="Supprimer"
+            (click)="deleteShipment(shipment)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr
+        mat-header-row
+        *matHeaderRowDef="displayedColumns"
+      ></tr>
+
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+      ></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td
+          class="mat-cell no-data"
+          [attr.colspan]="displayedColumns.length"
+        >
+          Aucune expédition trouvée.
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
