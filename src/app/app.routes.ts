@@ -3,6 +3,7 @@ import { authGuard } from '@core';
 import { AdminLayout } from '@theme/admin-layout/admin-layout';
 import { AuthLayout } from '@theme/auth-layout/auth-layout';
 
+import { Customers } from './routes/customers/customers';
 import { Dashboard } from './routes/dashboard/dashboard';
 import { Drivers } from './routes/drivers/drivers';
 import { Error403 } from './routes/sessions/error-403';
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: Dashboard },
       { path: 'trucks', component: Trucks },
       { path: 'drivers', component: Drivers },
+      { path: 'customers', component: Customers },
 
       { path: '403', component: Error403 },
       { path: '404', component: Error404 },
