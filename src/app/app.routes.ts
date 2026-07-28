@@ -7,6 +7,7 @@ import { Customers } from './routes/customers/customers';
 import { Dashboard } from './routes/dashboard/dashboard';
 import { Drivers } from './routes/drivers/drivers';
 import { Maintenance } from './routes/maintenance/maintenance';
+import { Notifications } from './routes/notifications/notifications';
 import { Error403 } from './routes/sessions/error-403';
 import { Error404 } from './routes/sessions/error-404';
 import { Error500 } from './routes/sessions/error-500';
@@ -34,6 +35,7 @@ export const routes: Routes = [
       { path: 'shipments', component: Shipments },
       { path: 'tracking', component: Tracking },
       { path: 'maintenance', component: Maintenance },
+      { path: 'notifications', component: Notifications },
 
       { path: '403', component: Error403 },
       { path: '404', component: Error404 },
