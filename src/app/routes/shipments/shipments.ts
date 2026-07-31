@@ -9,21 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface Shipment {
-  id: number;
-  reference: string;
-  customer: string;
-  origin: string;
-  destination: string;
-  departureDate: string;
-  deliveryDate: string;
-  truck: string;
-  driver: string;
-  status: 'En préparation' | 'En transit' | 'Livrée' | 'Annulée';
-}
+import {
+  Shipment,
+  ShipmentsService,
+} from '../../core/services/shipments';
 
 @Component({
   selector: 'app-shipments',
@@ -42,6 +37,8 @@ interface Shipment {
 })
 export class Shipments {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly shipmentsService =
+    inject(ShipmentsService);
 
   showForm = false;
   selectedShipment: Shipment | null = null;
@@ -58,44 +55,9 @@ export class Shipments {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<Shipment>([
-    {
-      id: 1,
-      reference: 'EXP-2026-001',
-      customer: 'Atlas Distribution',
-      origin: 'Casablanca',
-      destination: 'Rabat',
-      departureDate: '2026-07-25',
-      deliveryDate: '2026-07-26',
-      truck: '12345-A-6',
-      driver: 'Youssef El Amrani',
-      status: 'Livrée',
-    },
-    {
-      id: 2,
-      reference: 'EXP-2026-002',
-      customer: 'Marrakech Logistics',
-      origin: 'Casablanca',
-      destination: 'Marrakech',
-      departureDate: '2026-07-28',
-      deliveryDate: '2026-07-29',
-      truck: '67890-B-7',
-      driver: 'Hamza Benali',
-      status: 'En transit',
-    },
-    {
-      id: 3,
-      reference: 'EXP-2026-003',
-      customer: 'Tanger Import',
-      origin: 'Tanger',
-      destination: 'Fès',
-      departureDate: '2026-07-30',
-      deliveryDate: '2026-07-31',
-      truck: '11223-C-8',
-      driver: 'Omar Alaoui',
-      status: 'En préparation',
-    },
-  ]);
+  dataSource = new MatTableDataSource<Shipment>(
+    this.shipmentsService.getAll()
+  );
 
   shipmentForm = this.formBuilder.nonNullable.group({
     reference: [
@@ -143,30 +105,44 @@ export class Shipments {
       return;
     }
 
-    const formValue = this.shipmentForm.getRawValue();
-    const reference = formValue.reference.trim().toUpperCase();
-    const origin = formValue.origin.trim();
-    const destination = formValue.destination.trim();
+    const formValue =
+      this.shipmentForm.getRawValue();
 
-    const referenceAlreadyExists = this.dataSource.data.some(
-      shipment =>
-        shipment.id !== this.editingShipmentId &&
-        shipment.reference.toLowerCase() === reference.toLowerCase()
-    );
+    const reference = formValue.reference
+      .trim()
+      .toUpperCase();
+
+    const origin = formValue.origin.trim();
+    const destination =
+      formValue.destination.trim();
+
+    const referenceAlreadyExists =
+      this.shipmentsService.referenceExists(
+        reference,
+        this.editingShipmentId
+      );
 
     if (referenceAlreadyExists) {
-      alert('Une expédition avec cette référence existe déjà.');
+      alert(
+        'Une expédition avec cette référence existe déjà.'
+      );
       return;
     }
 
-    if (origin.toLowerCase() === destination.toLowerCase()) {
+    if (
+      origin.toLowerCase() ===
+      destination.toLowerCase()
+    ) {
       alert(
         'La ville de départ et la ville de destination doivent être différentes.'
       );
       return;
     }
 
-    if (formValue.deliveryDate < formValue.departureDate) {
+    if (
+      formValue.deliveryDate <
+      formValue.departureDate
+    ) {
       alert(
         'La date de livraison ne peut pas être antérieure à la date de départ.'
       );
@@ -186,33 +162,24 @@ export class Shipments {
     };
 
     if (this.editingShipmentId !== null) {
-      this.dataSource.data = this.dataSource.data.map(shipment =>
-        shipment.id === this.editingShipmentId
-          ? {
-              id: shipment.id,
-              ...shipmentData,
-            }
-          : shipment
+      this.shipmentsService.update(
+        this.editingShipmentId,
+        shipmentData
       );
     } else {
-      const newShipment: Shipment = {
-        id: this.getNextId(),
-        ...shipmentData,
-      };
-
-      this.dataSource.data = [
-        ...this.dataSource.data,
-        newShipment,
-      ];
+      this.shipmentsService.add(shipmentData);
     }
 
+    this.refreshShipments();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const value =
+      (event.target as HTMLInputElement).value;
 
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
   viewShipment(shipment: Shipment): void {
@@ -252,23 +219,25 @@ export class Shipments {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentShipment => currentShipment.id !== shipment.id
-    );
+    this.shipmentsService.delete(shipment.id);
+    this.refreshShipments();
 
-    if (this.selectedShipment?.id === shipment.id) {
+    if (
+      this.selectedShipment?.id === shipment.id
+    ) {
       this.selectedShipment = null;
     }
 
-    if (this.editingShipmentId === shipment.id) {
+    if (
+      this.editingShipmentId === shipment.id
+    ) {
       this.closeForm();
     }
   }
 
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(shipment => shipment.id);
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshShipments(): void {
+    this.dataSource.data =
+      this.shipmentsService.getAll();
   }
 
   private resetForm(): void {
