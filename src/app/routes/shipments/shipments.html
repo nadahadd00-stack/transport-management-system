@@ -5,8 +5,14 @@
       <p>Consulter et gérer les opérations de transport.</p>
     </div>
 
-    <button mat-flat-button color="primary" (click)="toggleForm()">
-      <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="toggleForm()"
+    >
+      <mat-icon>
+        {{ showForm ? 'close' : 'add' }}
+      </mat-icon>
 
       {{ showForm ? 'Fermer' : 'Ajouter une expédition' }}
     </button>
@@ -69,17 +75,11 @@
           <mat-label>Client</mat-label>
 
           <mat-select formControlName="customer">
-            <mat-option value="Atlas Distribution">
-              Atlas Distribution
-            </mat-option>
-
-            <mat-option value="Marrakech Logistics">
-              Marrakech Logistics
-            </mat-option>
-
-            <mat-option value="Tanger Import">
-              Tanger Import
-            </mat-option>
+            @for (customer of customers; track customer.id) {
+              <mat-option [value]="customer.companyName">
+                {{ customer.companyName }}
+              </mat-option>
+            }
           </mat-select>
 
           @if (
@@ -172,17 +172,12 @@
           <mat-label>Camion</mat-label>
 
           <mat-select formControlName="truck">
-            <mat-option value="12345-A-6">
-              12345-A-6
-            </mat-option>
-
-            <mat-option value="67890-B-7">
-              67890-B-7
-            </mat-option>
-
-            <mat-option value="11223-C-8">
-              11223-C-8
-            </mat-option>
+            @for (truck of trucks; track truck.id) {
+              <mat-option [value]="truck.registrationNumber">
+                {{ truck.registrationNumber }}
+                — {{ truck.brand }} {{ truck.model }}
+              </mat-option>
+            }
           </mat-select>
 
           @if (
@@ -199,17 +194,12 @@
           <mat-label>Chauffeur</mat-label>
 
           <mat-select formControlName="driver">
-            <mat-option value="Youssef El Amrani">
-              Youssef El Amrani
-            </mat-option>
-
-            <mat-option value="Hamza Benali">
-              Hamza Benali
-            </mat-option>
-
-            <mat-option value="Omar Alaoui">
-              Omar Alaoui
-            </mat-option>
+            @for (driver of drivers; track driver.id) {
+              <mat-option [value]="driver.fullName">
+                {{ driver.fullName }}
+                — {{ driver.licenseCategory }}
+              </mat-option>
+            }
           </mat-select>
 
           @if (
@@ -291,42 +281,58 @@
       <div class="details-grid">
         <div class="detail-item">
           <span>Référence</span>
-          <strong>{{ selectedShipment.reference }}</strong>
+          <strong>
+            {{ selectedShipment.reference }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Client</span>
-          <strong>{{ selectedShipment.customer }}</strong>
+          <strong>
+            {{ selectedShipment.customer }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Départ</span>
-          <strong>{{ selectedShipment.origin }}</strong>
+          <strong>
+            {{ selectedShipment.origin }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Destination</span>
-          <strong>{{ selectedShipment.destination }}</strong>
+          <strong>
+            {{ selectedShipment.destination }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Date de départ</span>
-          <strong>{{ selectedShipment.departureDate }}</strong>
+          <strong>
+            {{ selectedShipment.departureDate }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Date de livraison</span>
-          <strong>{{ selectedShipment.deliveryDate }}</strong>
+          <strong>
+            {{ selectedShipment.deliveryDate }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Camion</span>
-          <strong>{{ selectedShipment.truck }}</strong>
+          <strong>
+            {{ selectedShipment.truck }}
+          </strong>
         </div>
 
         <div class="detail-item">
           <span>Chauffeur</span>
-          <strong>{{ selectedShipment.driver }}</strong>
+          <strong>
+            {{ selectedShipment.driver }}
+          </strong>
         </div>
 
         <div class="detail-item">
@@ -354,7 +360,10 @@
     </div>
   }
 
-  <mat-form-field appearance="outline" class="search-field">
+  <mat-form-field
+    appearance="outline"
+    class="search-field"
+  >
     <mat-label>Rechercher une expédition</mat-label>
 
     <input
@@ -398,7 +407,9 @@
         </th>
 
         <td mat-cell *matCellDef="let shipment">
-          {{ shipment.origin }} → {{ shipment.destination }}
+          {{ shipment.origin }}
+          →
+          {{ shipment.destination }}
         </td>
       </ng-container>
 
@@ -463,7 +474,11 @@
           Actions
         </th>
 
-        <td mat-cell *matCellDef="let shipment" class="actions-cell">
+        <td
+          mat-cell
+          *matCellDef="let shipment"
+          class="actions-cell"
+        >
           <button
             mat-icon-button
             matTooltip="Consulter"
@@ -497,10 +512,16 @@
 
       <tr
         mat-row
-        *matRowDef="let row; columns: displayedColumns"
+        *matRowDef="
+          let row;
+          columns: displayedColumns
+        "
       ></tr>
 
-      <tr class="mat-row" *matNoDataRow>
+      <tr
+        class="mat-row"
+        *matNoDataRow
+      >
         <td
           class="mat-cell no-data"
           [attr.colspan]="displayedColumns.length"

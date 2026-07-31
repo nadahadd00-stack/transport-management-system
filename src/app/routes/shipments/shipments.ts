@@ -16,9 +16,21 @@ import {
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
+  Customer,
+  CustomersService,
+} from '../../core/services/customers';
+import {
+  Driver,
+  DriversService,
+} from '../../core/services/drivers';
+import {
   Shipment,
   ShipmentsService,
 } from '../../core/services/shipments';
+import {
+  Truck,
+  TrucksService,
+} from '../../core/services/trucks';
 
 @Component({
   selector: 'app-shipments',
@@ -37,8 +49,27 @@ import {
 })
 export class Shipments {
   private readonly formBuilder = inject(FormBuilder);
+
   private readonly shipmentsService =
     inject(ShipmentsService);
+
+  private readonly customersService =
+    inject(CustomersService);
+
+  private readonly trucksService =
+    inject(TrucksService);
+
+  private readonly driversService =
+    inject(DriversService);
+
+  customers: Customer[] =
+    this.customersService.getAll();
+
+  trucks: Truck[] =
+    this.trucksService.getAll();
+
+  drivers: Driver[] =
+    this.driversService.getAll();
 
   showForm = false;
   selectedShipment: Shipment | null = null;
@@ -87,6 +118,7 @@ export class Shipments {
   }
 
   openAddForm(): void {
+    this.refreshSelectionLists();
     this.editingShipmentId = null;
     this.selectedShipment = null;
     this.resetForm();
@@ -193,6 +225,8 @@ export class Shipments {
   }
 
   editShipment(shipment: Shipment): void {
+    this.refreshSelectionLists();
+
     this.selectedShipment = null;
     this.editingShipmentId = shipment.id;
     this.showForm = true;
@@ -238,6 +272,17 @@ export class Shipments {
   private refreshShipments(): void {
     this.dataSource.data =
       this.shipmentsService.getAll();
+  }
+
+  private refreshSelectionLists(): void {
+    this.customers =
+      this.customersService.getAll();
+
+    this.trucks =
+      this.trucksService.getAll();
+
+    this.drivers =
+      this.driversService.getAll();
   }
 
   private resetForm(): void {
