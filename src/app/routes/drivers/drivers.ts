@@ -9,19 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface Driver {
-  id: number;
-  fullName: string;
-  cin: string;
-  phone: string;
-  licenseNumber: string;
-  licenseCategory: string;
-  experienceYears: number;
-  status: 'Disponible' | 'En mission' | 'En congé' | 'Indisponible';
-}
+import {
+  Driver,
+  DriversService,
+} from '../../core/services/drivers';
 
 @Component({
   selector: 'app-drivers',
@@ -40,6 +37,7 @@ interface Driver {
 })
 export class Drivers {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly driversService = inject(DriversService);
 
   showForm = false;
   selectedDriver: Driver | null = null;
@@ -56,42 +54,19 @@ export class Drivers {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<Driver>([
-    {
-      id: 1,
-      fullName: 'Youssef El Amrani',
-      cin: 'AB123456',
-      phone: '0612345678',
-      licenseNumber: 'PC-10001',
-      licenseCategory: 'C',
-      experienceYears: 8,
-      status: 'Disponible',
-    },
-    {
-      id: 2,
-      fullName: 'Hamza Benali',
-      cin: 'CD789012',
-      phone: '0623456789',
-      licenseNumber: 'PC-10002',
-      licenseCategory: 'CE',
-      experienceYears: 5,
-      status: 'En mission',
-    },
-    {
-      id: 3,
-      fullName: 'Omar Alaoui',
-      cin: 'EF345678',
-      phone: '0634567890',
-      licenseNumber: 'PC-10003',
-      licenseCategory: 'C',
-      experienceYears: 12,
-      status: 'En congé',
-    },
-  ]);
+  dataSource = new MatTableDataSource<Driver>(
+    this.driversService.getAll()
+  );
 
   driverForm = this.formBuilder.nonNullable.group({
     fullName: ['', Validators.required],
-    cin: ['', [Validators.required, Validators.minLength(5)]],
+    cin: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(5),
+      ],
+    ],
     phone: [
       '',
       [
@@ -141,28 +116,38 @@ export class Drivers {
     }
 
     const formValue = this.driverForm.getRawValue();
-    const licenseNumber = formValue.licenseNumber.trim().toUpperCase();
-    const cin = formValue.cin.trim().toUpperCase();
 
-    const licenseAlreadyExists = this.dataSource.data.some(
-      driver =>
-        driver.id !== this.editingDriverId &&
-        driver.licenseNumber.toLowerCase() === licenseNumber.toLowerCase()
-    );
+    const cin = formValue.cin
+      .trim()
+      .toUpperCase();
 
-    if (licenseAlreadyExists) {
-      alert('Un chauffeur avec ce numéro de permis existe déjà.');
+    const licenseNumber = formValue.licenseNumber
+      .trim()
+      .toUpperCase();
+
+    const cinAlreadyExists =
+      this.driversService.cinExists(
+        cin,
+        this.editingDriverId
+      );
+
+    if (cinAlreadyExists) {
+      alert(
+        'Un chauffeur avec ce numéro de CIN existe déjà.'
+      );
       return;
     }
 
-    const cinAlreadyExists = this.dataSource.data.some(
-      driver =>
-        driver.id !== this.editingDriverId &&
-        driver.cin.toLowerCase() === cin.toLowerCase()
-    );
+    const licenseAlreadyExists =
+      this.driversService.licenseNumberExists(
+        licenseNumber,
+        this.editingDriverId
+      );
 
-    if (cinAlreadyExists) {
-      alert('Un chauffeur avec ce numéro de CIN existe déjà.');
+    if (licenseAlreadyExists) {
+      alert(
+        'Un chauffeur avec ce numéro de permis existe déjà.'
+      );
       return;
     }
 
@@ -177,29 +162,24 @@ export class Drivers {
     };
 
     if (this.editingDriverId !== null) {
-      this.dataSource.data = this.dataSource.data.map(driver =>
-        driver.id === this.editingDriverId
-          ? {
-              id: driver.id,
-              ...driverData,
-            }
-          : driver
+      this.driversService.update(
+        this.editingDriverId,
+        driverData
       );
     } else {
-      const newDriver: Driver = {
-        id: this.getNextId(),
-        ...driverData,
-      };
-
-      this.dataSource.data = [...this.dataSource.data, newDriver];
+      this.driversService.add(driverData);
     }
 
+    this.refreshDrivers();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = value.trim().toLowerCase();
+    const value =
+      (event.target as HTMLInputElement).value;
+
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
   viewDriver(driver: Driver): void {
@@ -237,9 +217,8 @@ export class Drivers {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentDriver => currentDriver.id !== driver.id
-    );
+    this.driversService.delete(driver.id);
+    this.refreshDrivers();
 
     if (this.selectedDriver?.id === driver.id) {
       this.selectedDriver = null;
@@ -250,10 +229,9 @@ export class Drivers {
     }
   }
 
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(driver => driver.id);
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshDrivers(): void {
+    this.dataSource.data =
+      this.driversService.getAll();
   }
 
   private resetForm(): void {
