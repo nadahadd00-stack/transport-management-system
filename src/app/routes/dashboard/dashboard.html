@@ -1,1 +1,357 @@
-<page-header />
+<div class="dashboard-page">
+  <div class="dashboard-header">
+    <div>
+      <h1>Tableau de bord TMS</h1>
+
+      <p>
+        Vue générale des activités de transport —
+        <strong>{{ today }}</strong>
+      </p>
+    </div>
+
+    <button
+      mat-flat-button
+      color="primary"
+      routerLink="/shipments"
+    >
+      <mat-icon>add</mat-icon>
+      Nouvelle expédition
+    </button>
+  </div>
+
+  <section class="metrics-grid">
+    @for (metric of metrics; track metric.title) {
+      <article
+        class="metric-card"
+        [class]="metric.cssClass"
+        [routerLink]="metric.route"
+        matTooltip="Consulter le module"
+      >
+        <div class="metric-icon">
+          <mat-icon>{{ metric.icon }}</mat-icon>
+        </div>
+
+        <div class="metric-content">
+          <span>{{ metric.title }}</span>
+
+          <strong>{{ metric.value }}</strong>
+
+          <small>{{ metric.subtitle }}</small>
+        </div>
+
+        <mat-icon class="metric-arrow">
+          arrow_forward
+        </mat-icon>
+      </article>
+    }
+  </section>
+
+  <section class="dashboard-section quick-actions-section">
+    <div class="section-header">
+      <div>
+        <h2>Actions rapides</h2>
+        <p>Accéder rapidement aux principales opérations.</p>
+      </div>
+
+      <mat-icon>bolt</mat-icon>
+    </div>
+
+    <div class="quick-actions-grid">
+      @for (action of quickActions; track action.label) {
+        <button
+          mat-stroked-button
+          type="button"
+          [routerLink]="action.route"
+        >
+          <mat-icon>{{ action.icon }}</mat-icon>
+          {{ action.label }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="performance-grid">
+    <article class="performance-card">
+      <div class="performance-header">
+        <div>
+          <span>Taux de livraison</span>
+          <strong>{{ deliveryRate }} %</strong>
+        </div>
+
+        <div class="performance-icon delivery-icon">
+          <mat-icon>task_alt</mat-icon>
+        </div>
+      </div>
+
+      <mat-progress-bar
+        mode="determinate"
+        [value]="deliveryRate"
+      ></mat-progress-bar>
+
+      <p>
+        Performance des expéditions livrées pendant la période actuelle.
+      </p>
+
+      <button
+        mat-button
+        color="primary"
+        routerLink="/reports"
+      >
+        Voir les statistiques
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </article>
+
+    <article class="performance-card">
+      <div class="performance-header">
+        <div>
+          <span>Disponibilité de la flotte</span>
+          <strong>{{ fleetAvailabilityRate }} %</strong>
+        </div>
+
+        <div class="performance-icon fleet-icon">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+      </div>
+
+      <mat-progress-bar
+        mode="determinate"
+        [value]="fleetAvailabilityRate"
+      ></mat-progress-bar>
+
+      <p>
+        Pourcentage des camions actuellement actifs et disponibles.
+      </p>
+
+      <button
+        mat-button
+        color="primary"
+        routerLink="/trucks"
+      >
+        Consulter la flotte
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </article>
+  </section>
+
+  <section class="dashboard-section">
+    <div class="section-header">
+      <div>
+        <h2>Expéditions récentes</h2>
+
+        <p>
+          Dernières opérations enregistrées dans le système.
+        </p>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        routerLink="/shipments"
+      >
+        Voir toutes les expéditions
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table
+        mat-table
+        [dataSource]="recentShipments"
+        class="dashboard-table shipments-table"
+      >
+        <ng-container matColumnDef="reference">
+          <th mat-header-cell *matHeaderCellDef>
+            Référence
+          </th>
+
+          <td mat-cell *matCellDef="let shipment">
+            <strong>{{ shipment.reference }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="customer">
+          <th mat-header-cell *matHeaderCellDef>
+            Client
+          </th>
+
+          <td mat-cell *matCellDef="let shipment">
+            {{ shipment.customer }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="route">
+          <th mat-header-cell *matHeaderCellDef>
+            Trajet
+          </th>
+
+          <td mat-cell *matCellDef="let shipment">
+            <div class="route-cell">
+              <mat-icon>location_on</mat-icon>
+
+              <span>
+                {{ shipment.origin }}
+                →
+                {{ shipment.destination }}
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="driver">
+          <th mat-header-cell *matHeaderCellDef>
+            Chauffeur
+          </th>
+
+          <td mat-cell *matCellDef="let shipment">
+            {{ shipment.driver }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>
+            Statut
+          </th>
+
+          <td mat-cell *matCellDef="let shipment">
+            <span
+              class="status-badge"
+              [class.status-preparation]="
+                shipment.status === 'En préparation'
+              "
+              [class.status-transit]="
+                shipment.status === 'En transit'
+              "
+              [class.status-delivered]="
+                shipment.status === 'Livrée'
+              "
+              [class.status-delayed]="
+                shipment.status === 'Retardée'
+              "
+            >
+              {{ shipment.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="shipmentDisplayedColumns"
+        ></tr>
+
+        <tr
+          mat-row
+          *matRowDef="
+            let row;
+            columns: shipmentDisplayedColumns
+          "
+        ></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="dashboard-section">
+    <div class="section-header">
+      <div>
+        <h2>Maintenance de la flotte</h2>
+
+        <p>
+          Interventions planifiées et opérations en cours.
+        </p>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        routerLink="/maintenance"
+      >
+        Voir la maintenance
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table
+        mat-table
+        [dataSource]="maintenanceAlerts"
+        class="dashboard-table maintenance-table"
+      >
+        <ng-container matColumnDef="truck">
+          <th mat-header-cell *matHeaderCellDef>
+            Camion
+          </th>
+
+          <td mat-cell *matCellDef="let maintenance">
+            <div class="truck-cell">
+              <mat-icon>local_shipping</mat-icon>
+
+              <strong>{{ maintenance.truck }}</strong>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="maintenanceType">
+          <th mat-header-cell *matHeaderCellDef>
+            Intervention
+          </th>
+
+          <td mat-cell *matCellDef="let maintenance">
+            {{ maintenance.maintenanceType }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="scheduledDate">
+          <th mat-header-cell *matHeaderCellDef>
+            Date prévue
+          </th>
+
+          <td mat-cell *matCellDef="let maintenance">
+            {{ maintenance.scheduledDate }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="workshop">
+          <th mat-header-cell *matHeaderCellDef>
+            Garage
+          </th>
+
+          <td mat-cell *matCellDef="let maintenance">
+            {{ maintenance.workshop }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>
+            Statut
+          </th>
+
+          <td mat-cell *matCellDef="let maintenance">
+            <span
+              class="status-badge"
+              [class.status-planned]="
+                maintenance.status === 'Planifiée'
+              "
+              [class.status-progress]="
+                maintenance.status === 'En cours'
+              "
+              [class.status-completed]="
+                maintenance.status === 'Terminée'
+              "
+            >
+              {{ maintenance.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="maintenanceDisplayedColumns"
+        ></tr>
+
+        <tr
+          mat-row
+          *matRowDef="
+            let row;
+            columns: maintenanceDisplayedColumns
+          "
+        ></tr>
+      </table>
+    </div>
