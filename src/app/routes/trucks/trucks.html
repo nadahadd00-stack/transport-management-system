@@ -20,7 +20,11 @@
     >
       <div class="form-header">
         <h2>
-          {{ editingTruckId !== null ? 'Modifier le camion' : 'Ajouter un camion' }}
+          {{
+            editingTruckId !== null
+              ? 'Modifier le camion'
+              : 'Ajouter un camion'
+          }}
         </h2>
 
         <p>
@@ -56,7 +60,7 @@
             truckForm.controls.registrationNumber.hasError('minlength')
           ) {
             <mat-error>
-              L’immatriculation doit contenir au moins 5 caractères.
+              L’immatriculation doit contenir au moins 3 caractères.
             </mat-error>
           }
         </mat-form-field>
@@ -240,10 +244,18 @@
 
           <strong
             class="status-badge"
-            [class.status-available]="selectedTruck.status === 'Disponible'"
-            [class.status-assigned]="selectedTruck.status === 'Affecté'"
-            [class.status-maintenance]="selectedTruck.status === 'Maintenance'"
-            [class.status-out]="selectedTruck.status === 'Hors service'"
+            [class.status-available]="
+              selectedTruck.status === 'Disponible'
+            "
+            [class.status-assigned]="
+              selectedTruck.status === 'Affecté'
+            "
+            [class.status-maintenance]="
+              selectedTruck.status === 'Maintenance'
+            "
+            [class.status-out]="
+              selectedTruck.status === 'Hors service'
+            "
           >
             {{ selectedTruck.status }}
           </strong>
@@ -300,6 +312,16 @@
         </td>
       </ng-container>
 
+      <ng-container matColumnDef="manufactureYear">
+        <th mat-header-cell *matHeaderCellDef>
+          Année
+        </th>
+
+        <td mat-cell *matCellDef="let truck">
+          {{ truck.manufactureYear }}
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="capacity">
         <th mat-header-cell *matHeaderCellDef>
           Capacité
@@ -328,10 +350,18 @@
         <td mat-cell *matCellDef="let truck">
           <span
             class="status-badge"
-            [class.status-available]="truck.status === 'Disponible'"
-            [class.status-assigned]="truck.status === 'Affecté'"
-            [class.status-maintenance]="truck.status === 'Maintenance'"
-            [class.status-out]="truck.status === 'Hors service'"
+            [class.status-available]="
+              truck.status === 'Disponible'
+            "
+            [class.status-assigned]="
+              truck.status === 'Affecté'
+            "
+            [class.status-maintenance]="
+              truck.status === 'Maintenance'
+            "
+            [class.status-out]="
+              truck.status === 'Hors service'
+            "
           >
             {{ truck.status }}
           </span>
@@ -343,7 +373,11 @@
           Actions
         </th>
 
-        <td mat-cell *matCellDef="let truck" class="actions-cell">
+        <td
+          mat-cell
+          *matCellDef="let truck"
+          class="actions-cell"
+        >
           <button
             mat-icon-button
             matTooltip="Consulter"
@@ -391,4 +425,3 @@
     </table>
   </div>
 </div>
-

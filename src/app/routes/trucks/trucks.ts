@@ -9,19 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface Truck {
-  id: number;
-  registrationNumber: string;
-  brand: string;
-  model: string;
-  manufactureYear: number;
-  capacity: number;
-  fuelType: string;
-  status: 'Disponible' | 'Affecté' | 'Maintenance' | 'Hors service';
-}
+import {
+  Truck,
+  TrucksService,
+} from '../../core/services/trucks';
 
 @Component({
   selector: 'app-trucks',
@@ -40,6 +37,7 @@ interface Truck {
 })
 export class Trucks {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly trucksService = inject(TrucksService);
 
   showForm = false;
   selectedTruck: Truck | null = null;
@@ -49,49 +47,24 @@ export class Trucks {
     'registrationNumber',
     'brand',
     'model',
+    'manufactureYear',
     'capacity',
     'fuelType',
     'status',
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<Truck>([
-    {
-      id: 1,
-      registrationNumber: '12345-A-6',
-      brand: 'Volvo',
-      model: 'FH16',
-      manufactureYear: 2022,
-      capacity: 25,
-      fuelType: 'Diesel',
-      status: 'Disponible',
-    },
-    {
-      id: 2,
-      registrationNumber: '67890-B-7',
-      brand: 'Mercedes-Benz',
-      model: 'Actros',
-      manufactureYear: 2021,
-      capacity: 20,
-      fuelType: 'Diesel',
-      status: 'Affecté',
-    },
-    {
-      id: 3,
-      registrationNumber: '24680-C-8',
-      brand: 'Scania',
-      model: 'R450',
-      manufactureYear: 2020,
-      capacity: 22,
-      fuelType: 'Diesel',
-      status: 'Maintenance',
-    },
-  ]);
+  dataSource = new MatTableDataSource<Truck>(
+    this.trucksService.getAll()
+  );
 
   truckForm = this.formBuilder.nonNullable.group({
     registrationNumber: [
       '',
-      [Validators.required, Validators.minLength(5)],
+      [
+        Validators.required,
+        Validators.minLength(3),
+      ],
     ],
     brand: ['', Validators.required],
     model: ['', Validators.required],
@@ -103,7 +76,13 @@ export class Trucks {
         Validators.max(new Date().getFullYear()),
       ],
     ],
-    capacity: [1, [Validators.required, Validators.min(1)]],
+    capacity: [
+      1,
+      [
+        Validators.required,
+        Validators.min(1),
+      ],
+    ],
     fuelType: ['Diesel', Validators.required],
     status: ['Disponible', Validators.required],
   });
@@ -137,17 +116,20 @@ export class Trucks {
     }
 
     const formValue = this.truckForm.getRawValue();
-    const registrationNumber = formValue.registrationNumber.trim();
 
-    const registrationAlreadyExists = this.dataSource.data.some(
-      truck =>
-        truck.id !== this.editingTruckId &&
-        truck.registrationNumber.toLowerCase() ===
-          registrationNumber.toLowerCase()
-    );
+    const registrationNumber =
+      formValue.registrationNumber.trim().toUpperCase();
+
+    const registrationAlreadyExists =
+      this.trucksService.registrationExists(
+        registrationNumber,
+        this.editingTruckId
+      );
 
     if (registrationAlreadyExists) {
-      alert('Un camion avec cette immatriculation existe déjà.');
+      alert(
+        'Un camion avec cette immatriculation existe déjà.'
+      );
       return;
     }
 
@@ -162,29 +144,23 @@ export class Trucks {
     };
 
     if (this.editingTruckId !== null) {
-      this.dataSource.data = this.dataSource.data.map(truck =>
-        truck.id === this.editingTruckId
-          ? {
-              id: truck.id,
-              ...truckData,
-            }
-          : truck
+      this.trucksService.update(
+        this.editingTruckId,
+        truckData
       );
     } else {
-      const newTruck: Truck = {
-        id: this.getNextId(),
-        ...truckData,
-      };
-
-      this.dataSource.data = [...this.dataSource.data, newTruck];
+      this.trucksService.add(truckData);
     }
 
+    this.refreshTrucks();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = value.trim().toLowerCase();
+
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
   viewTruck(truck: Truck): void {
@@ -214,31 +190,29 @@ export class Trucks {
   }
 
   deleteTruck(truck: Truck): void {
-  const confirmation = confirm(
-    `Voulez-vous vraiment supprimer le camion ${truck.registrationNumber} ?`
-  );
+    const confirmation = confirm(
+      `Voulez-vous vraiment supprimer le camion ${truck.registrationNumber} ?`
+    );
 
-  if (!confirmation) {
-    return;
+    if (!confirmation) {
+      return;
+    }
+
+    this.trucksService.delete(truck.id);
+    this.refreshTrucks();
+
+    if (this.selectedTruck?.id === truck.id) {
+      this.selectedTruck = null;
+    }
+
+    if (this.editingTruckId === truck.id) {
+      this.closeForm();
+    }
   }
 
-  this.dataSource.data = this.dataSource.data.filter(
-    currentTruck => currentTruck.id !== truck.id
-  );
-
-  if (this.selectedTruck?.id === truck.id) {
-    this.selectedTruck = null;
-  }
-
-  if (this.editingTruckId === truck.id) {
-    this.closeForm();
-  }
-}
-
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(truck => truck.id);
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshTrucks(): void {
+    this.dataSource.data =
+      this.trucksService.getAll();
   }
 
   private resetForm(): void {
