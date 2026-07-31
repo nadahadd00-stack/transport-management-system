@@ -9,19 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface Customer {
-  id: number;
-  companyName: string;
-  contactName: string;
-  phone: string;
-  email: string;
-  city: string;
-  address: string;
-  status: 'Actif' | 'Inactif';
-}
+import {
+  Customer,
+  CustomersService,
+} from '../../core/services/customers';
 
 @Component({
   selector: 'app-customers',
@@ -40,6 +37,7 @@ interface Customer {
 })
 export class Customers {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly customersService = inject(CustomersService);
 
   showForm = false;
   selectedCustomer: Customer | null = null;
@@ -55,38 +53,9 @@ export class Customers {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<Customer>([
-    {
-      id: 1,
-      companyName: 'Atlas Distribution',
-      contactName: 'Ahmed Benali',
-      phone: '0611223344',
-      email: 'contact@atlas.ma',
-      city: 'Casablanca',
-      address: 'Quartier Industriel, Casablanca',
-      status: 'Actif',
-    },
-    {
-      id: 2,
-      companyName: 'Marrakech Logistics',
-      contactName: 'Salma El Idrissi',
-      phone: '0622334455',
-      email: 'contact@marrakech-logistics.ma',
-      city: 'Marrakech',
-      address: 'Zone Industrielle Sidi Ghanem, Marrakech',
-      status: 'Actif',
-    },
-    {
-      id: 3,
-      companyName: 'Tanger Import',
-      contactName: 'Yassine Alaoui',
-      phone: '0633445566',
-      email: 'contact@tanger-import.ma',
-      city: 'Tanger',
-      address: 'Zone Franche, Tanger',
-      status: 'Inactif',
-    },
-  ]);
+  dataSource = new MatTableDataSource<Customer>(
+    this.customersService.getAll()
+  );
 
   customerForm = this.formBuilder.nonNullable.group({
     companyName: ['', Validators.required],
@@ -139,16 +108,21 @@ export class Customers {
     }
 
     const formValue = this.customerForm.getRawValue();
-    const email = formValue.email.trim().toLowerCase();
 
-    const emailAlreadyExists = this.dataSource.data.some(
-      customer =>
-        customer.id !== this.editingCustomerId &&
-        customer.email.toLowerCase() === email
-    );
+    const email = formValue.email
+      .trim()
+      .toLowerCase();
+
+    const emailAlreadyExists =
+      this.customersService.emailExists(
+        email,
+        this.editingCustomerId
+      );
 
     if (emailAlreadyExists) {
-      alert('Un client avec cette adresse e-mail existe déjà.');
+      alert(
+        'Un client avec cette adresse e-mail existe déjà.'
+      );
       return;
     }
 
@@ -163,33 +137,24 @@ export class Customers {
     };
 
     if (this.editingCustomerId !== null) {
-      this.dataSource.data = this.dataSource.data.map(customer =>
-        customer.id === this.editingCustomerId
-          ? {
-              id: customer.id,
-              ...customerData,
-            }
-          : customer
+      this.customersService.update(
+        this.editingCustomerId,
+        customerData
       );
     } else {
-      const newCustomer: Customer = {
-        id: this.getNextId(),
-        ...customerData,
-      };
-
-      this.dataSource.data = [
-        ...this.dataSource.data,
-        newCustomer,
-      ];
+      this.customersService.add(customerData);
     }
 
+    this.refreshCustomers();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const value =
+      (event.target as HTMLInputElement).value;
 
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
   viewCustomer(customer: Customer): void {
@@ -227,9 +192,8 @@ export class Customers {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentCustomer => currentCustomer.id !== customer.id
-    );
+    this.customersService.delete(customer.id);
+    this.refreshCustomers();
 
     if (this.selectedCustomer?.id === customer.id) {
       this.selectedCustomer = null;
@@ -240,10 +204,9 @@ export class Customers {
     }
   }
 
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(customer => customer.id);
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshCustomers(): void {
+    this.dataSource.data =
+      this.customersService.getAll();
   }
 
   private resetForm(): void {
