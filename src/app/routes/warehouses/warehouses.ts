@@ -9,19 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface Warehouse {
-  id: number;
-  name: string;
-  city: string;
-  address: string;
-  capacity: number;
-  managerName: string;
-  phone: string;
-  status: 'Actif' | 'Complet' | 'Maintenance' | 'Inactif';
-}
+import {
+  Warehouse,
+  WarehousesService,
+} from '../../core/services/warehouses';
 
 @Component({
   selector: 'app-warehouses',
@@ -40,6 +37,8 @@ interface Warehouse {
 })
 export class Warehouses {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly warehousesService =
+    inject(WarehousesService);
 
   showForm = false;
   selectedWarehouse: Warehouse | null = null;
@@ -55,44 +54,21 @@ export class Warehouses {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<Warehouse>([
-    {
-      id: 1,
-      name: 'Entrepôt Casablanca',
-      city: 'Casablanca',
-      address: 'Zone Industrielle Aïn Sebaâ',
-      capacity: 5000,
-      managerName: 'Karim Alaoui',
-      phone: '0611223344',
-      status: 'Actif',
-    },
-    {
-      id: 2,
-      name: 'Entrepôt Tanger',
-      city: 'Tanger',
-      address: 'Zone Franche de Tanger',
-      capacity: 3500,
-      managerName: 'Nadia Benali',
-      phone: '0622334455',
-      status: 'Complet',
-    },
-    {
-      id: 3,
-      name: 'Entrepôt Marrakech',
-      city: 'Marrakech',
-      address: 'Zone Industrielle Sidi Ghanem',
-      capacity: 2800,
-      managerName: 'Omar El Idrissi',
-      phone: '0633445566',
-      status: 'Maintenance',
-    },
-  ]);
+  dataSource = new MatTableDataSource<Warehouse>(
+    this.warehousesService.getAll()
+  );
 
   warehouseForm = this.formBuilder.nonNullable.group({
     name: ['', Validators.required],
     city: ['', Validators.required],
     address: ['', Validators.required],
-    capacity: [1, [Validators.required, Validators.min(1)]],
+    capacity: [
+      1,
+      [
+        Validators.required,
+        Validators.min(1),
+      ],
+    ],
     managerName: ['', Validators.required],
     phone: [
       '',
@@ -132,17 +108,21 @@ export class Warehouses {
       return;
     }
 
-    const formValue = this.warehouseForm.getRawValue();
+    const formValue =
+      this.warehouseForm.getRawValue();
+
     const name = formValue.name.trim();
 
-    const warehouseAlreadyExists = this.dataSource.data.some(
-      warehouse =>
-        warehouse.id !== this.editingWarehouseId &&
-        warehouse.name.toLowerCase() === name.toLowerCase()
-    );
+    const warehouseAlreadyExists =
+      this.warehousesService.nameExists(
+        name,
+        this.editingWarehouseId
+      );
 
     if (warehouseAlreadyExists) {
-      alert('Un entrepôt avec ce nom existe déjà.');
+      alert(
+        'Un entrepôt avec ce nom existe déjà.'
+      );
       return;
     }
 
@@ -157,29 +137,24 @@ export class Warehouses {
     };
 
     if (this.editingWarehouseId !== null) {
-      this.dataSource.data = this.dataSource.data.map(warehouse =>
-        warehouse.id === this.editingWarehouseId
-          ? {
-              id: warehouse.id,
-              ...warehouseData,
-            }
-          : warehouse
+      this.warehousesService.update(
+        this.editingWarehouseId,
+        warehouseData
       );
     } else {
-      const newWarehouse: Warehouse = {
-        id: this.getNextId(),
-        ...warehouseData,
-      };
-
-      this.dataSource.data = [...this.dataSource.data, newWarehouse];
+      this.warehousesService.add(warehouseData);
     }
 
+    this.refreshWarehouses();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = value.trim().toLowerCase();
+    const value =
+      (event.target as HTMLInputElement).value;
+
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
   viewWarehouse(warehouse: Warehouse): void {
@@ -217,22 +192,25 @@ export class Warehouses {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentWarehouse => currentWarehouse.id !== warehouse.id
-    );
+    this.warehousesService.delete(warehouse.id);
+    this.refreshWarehouses();
 
-    if (this.selectedWarehouse?.id === warehouse.id) {
+    if (
+      this.selectedWarehouse?.id === warehouse.id
+    ) {
       this.selectedWarehouse = null;
     }
 
-    if (this.editingWarehouseId === warehouse.id) {
+    if (
+      this.editingWarehouseId === warehouse.id
+    ) {
       this.closeForm();
     }
   }
 
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(warehouse => warehouse.id);
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshWarehouses(): void {
+    this.dataSource.data =
+      this.warehousesService.getAll();
   }
 
   private resetForm(): void {
