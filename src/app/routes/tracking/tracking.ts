@@ -10,21 +10,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface TrackingRecord {
-  id: number;
-  shipmentReference: string;
-  truck: string;
-  driver: string;
-  origin: string;
-  destination: string;
-  currentLocation: string;
-  progress: number;
-  lastUpdate: string;
-  status: 'En attente' | 'En route' | 'Livrée' | 'Retardée';
-}
+import {
+  TrackingRecord,
+  TrackingService,
+} from '../../core/services/tracking';
 
 @Component({
   selector: 'app-tracking',
@@ -44,6 +39,8 @@ interface TrackingRecord {
 })
 export class Tracking {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly trackingService =
+    inject(TrackingService);
 
   showForm = false;
   selectedTracking: TrackingRecord | null = null;
@@ -60,44 +57,9 @@ export class Tracking {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<TrackingRecord>([
-    {
-      id: 1,
-      shipmentReference: 'EXP-2026-001',
-      truck: '12345-A-6',
-      driver: 'Youssef El Amrani',
-      origin: 'Casablanca',
-      destination: 'Rabat',
-      currentLocation: 'Rabat',
-      progress: 100,
-      lastUpdate: '2026-07-26T14:30',
-      status: 'Livrée',
-    },
-    {
-      id: 2,
-      shipmentReference: 'EXP-2026-002',
-      truck: '67890-B-7',
-      driver: 'Hamza Benali',
-      origin: 'Casablanca',
-      destination: 'Marrakech',
-      currentLocation: 'Settat',
-      progress: 45,
-      lastUpdate: '2026-07-28T13:15',
-      status: 'En route',
-    },
-    {
-      id: 3,
-      shipmentReference: 'EXP-2026-003',
-      truck: '11223-C-8',
-      driver: 'Omar Alaoui',
-      origin: 'Tanger',
-      destination: 'Fès',
-      currentLocation: 'Entrepôt Tanger',
-      progress: 10,
-      lastUpdate: '2026-07-28T09:00',
-      status: 'En attente',
-    },
-  ]);
+  dataSource = new MatTableDataSource<TrackingRecord>(
+    this.trackingService.getAll()
+  );
 
   trackingForm = this.formBuilder.nonNullable.group({
     shipmentReference: ['', Validators.required],
@@ -146,16 +108,19 @@ export class Tracking {
       return;
     }
 
-    const formValue = this.trackingForm.getRawValue();
-    const shipmentReference =
-      formValue.shipmentReference.trim().toUpperCase();
+    const formValue =
+      this.trackingForm.getRawValue();
 
-    const referenceAlreadyExists = this.dataSource.data.some(
-      tracking =>
-        tracking.id !== this.editingTrackingId &&
-        tracking.shipmentReference.toLowerCase() ===
-          shipmentReference.toLowerCase()
-    );
+    const shipmentReference =
+      formValue.shipmentReference
+        .trim()
+        .toUpperCase();
+
+    const referenceAlreadyExists =
+      this.trackingService.shipmentReferenceExists(
+        shipmentReference,
+        this.editingTrackingId
+      );
 
     if (referenceAlreadyExists) {
       alert(
@@ -164,9 +129,13 @@ export class Tracking {
       return;
     }
 
+    const origin = formValue.origin.trim();
+    const destination =
+      formValue.destination.trim();
+
     if (
-      formValue.origin.trim().toLowerCase() ===
-      formValue.destination.trim().toLowerCase()
+      origin.toLowerCase() ===
+      destination.toLowerCase()
     ) {
       alert(
         'La ville de départ et la destination doivent être différentes.'
@@ -174,48 +143,47 @@ export class Tracking {
       return;
     }
 
-    const trackingData: Omit<TrackingRecord, 'id'> = {
+    const trackingData: Omit<
+      TrackingRecord,
+      'id'
+    > = {
       shipmentReference,
       truck: formValue.truck.trim(),
       driver: formValue.driver.trim(),
-      origin: formValue.origin.trim(),
-      destination: formValue.destination.trim(),
-      currentLocation: formValue.currentLocation.trim(),
+      origin,
+      destination,
+      currentLocation:
+        formValue.currentLocation.trim(),
       progress: formValue.progress,
       lastUpdate: formValue.lastUpdate,
-      status: formValue.status as TrackingRecord['status'],
+      status:
+        formValue.status as TrackingRecord['status'],
     };
 
     if (this.editingTrackingId !== null) {
-      this.dataSource.data = this.dataSource.data.map(tracking =>
-        tracking.id === this.editingTrackingId
-          ? {
-              id: tracking.id,
-              ...trackingData,
-            }
-          : tracking
+      this.trackingService.update(
+        this.editingTrackingId,
+        trackingData
       );
     } else {
-      const newTracking: TrackingRecord = {
-        id: this.getNextId(),
-        ...trackingData,
-      };
-
-      this.dataSource.data = [
-        ...this.dataSource.data,
-        newTracking,
-      ];
+      this.trackingService.add(trackingData);
     }
 
+    this.refreshTrackingRecords();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = value.trim().toLowerCase();
+    const value =
+      (event.target as HTMLInputElement).value;
+
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
-  viewTracking(tracking: TrackingRecord): void {
+  viewTracking(
+    tracking: TrackingRecord
+  ): void {
     this.selectedTracking = tracking;
     this.showForm = false;
     this.editingTrackingId = null;
@@ -225,25 +193,31 @@ export class Tracking {
     this.selectedTracking = null;
   }
 
-  editTracking(tracking: TrackingRecord): void {
+  editTracking(
+    tracking: TrackingRecord
+  ): void {
     this.selectedTracking = null;
     this.editingTrackingId = tracking.id;
     this.showForm = true;
 
     this.trackingForm.setValue({
-      shipmentReference: tracking.shipmentReference,
+      shipmentReference:
+        tracking.shipmentReference,
       truck: tracking.truck,
       driver: tracking.driver,
       origin: tracking.origin,
       destination: tracking.destination,
-      currentLocation: tracking.currentLocation,
+      currentLocation:
+        tracking.currentLocation,
       progress: tracking.progress,
       lastUpdate: tracking.lastUpdate,
       status: tracking.status,
     });
   }
 
-  deleteTracking(tracking: TrackingRecord): void {
+  deleteTracking(
+    tracking: TrackingRecord
+  ): void {
     const confirmation = confirm(
       `Voulez-vous vraiment supprimer le suivi ${tracking.shipmentReference} ?`
     );
@@ -252,23 +226,25 @@ export class Tracking {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentTracking => currentTracking.id !== tracking.id
-    );
+    this.trackingService.delete(tracking.id);
+    this.refreshTrackingRecords();
 
-    if (this.selectedTracking?.id === tracking.id) {
+    if (
+      this.selectedTracking?.id === tracking.id
+    ) {
       this.selectedTracking = null;
     }
 
-    if (this.editingTrackingId === tracking.id) {
+    if (
+      this.editingTrackingId === tracking.id
+    ) {
       this.closeForm();
     }
   }
 
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(tracking => tracking.id);
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshTrackingRecords(): void {
+    this.dataSource.data =
+      this.trackingService.getAll();
   }
 
   private resetForm(): void {
