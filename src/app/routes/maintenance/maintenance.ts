@@ -9,20 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface MaintenanceRecord {
-  id: number;
-  truck: string;
-  maintenanceType: string;
-  description: string;
-  scheduledDate: string;
-  mileage: number;
-  cost: number;
-  workshop: string;
-  status: 'Planifiée' | 'En cours' | 'Terminée' | 'Annulée';
-}
+import {
+  MaintenanceRecord,
+  MaintenanceService,
+} from '../../core/services/maintenance';
 
 @Component({
   selector: 'app-maintenance',
@@ -42,8 +38,14 @@ interface MaintenanceRecord {
 export class Maintenance {
   private readonly formBuilder = inject(FormBuilder);
 
+  private readonly maintenanceService =
+    inject(MaintenanceService);
+
   showForm = false;
-  selectedMaintenance: MaintenanceRecord | null = null;
+
+  selectedMaintenance: MaintenanceRecord | null =
+    null;
+
   editingMaintenanceId: number | null = null;
 
   displayedColumns: string[] = [
@@ -57,70 +59,59 @@ export class Maintenance {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<MaintenanceRecord>([
-    {
-      id: 1,
-      truck: '12345-A-6',
-      maintenanceType: 'Vidange',
-      description: 'Vidange moteur et remplacement du filtre à huile.',
-      scheduledDate: '2026-07-30',
-      mileage: 85000,
-      cost: 1200,
-      workshop: 'Garage Atlas',
-      status: 'Planifiée',
-    },
-    {
-      id: 2,
-      truck: '67890-B-7',
-      maintenanceType: 'Freinage',
-      description: 'Contrôle et remplacement des plaquettes de frein.',
-      scheduledDate: '2026-07-28',
-      mileage: 112000,
-      cost: 2500,
-      workshop: 'Auto Service Casablanca',
-      status: 'En cours',
-    },
-    {
-      id: 3,
-      truck: '11223-C-8',
-      maintenanceType: 'Pneumatiques',
-      description: 'Remplacement des pneumatiques avant.',
-      scheduledDate: '2026-07-20',
-      mileage: 97000,
-      cost: 4800,
-      workshop: 'Pneu Express Tanger',
-      status: 'Terminée',
-    },
-  ]);
+  dataSource =
+    new MatTableDataSource<MaintenanceRecord>(
+      this.maintenanceService.getAll()
+    );
 
-  maintenanceForm = this.formBuilder.nonNullable.group({
-    truck: ['', Validators.required],
-    maintenanceType: ['', Validators.required],
-    description: [
-      '',
-      [
+  maintenanceForm =
+    this.formBuilder.nonNullable.group({
+      truck: ['', Validators.required],
+
+      maintenanceType: [
+        '',
         Validators.required,
-        Validators.minLength(5),
       ],
-    ],
-    scheduledDate: ['', Validators.required],
-    mileage: [
-      0,
-      [
+
+      description: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(5),
+        ],
+      ],
+
+      scheduledDate: [
+        '',
         Validators.required,
-        Validators.min(0),
       ],
-    ],
-    cost: [
-      0,
-      [
+
+      mileage: [
+        0,
+        [
+          Validators.required,
+          Validators.min(0),
+        ],
+      ],
+
+      cost: [
+        0,
+        [
+          Validators.required,
+          Validators.min(0),
+        ],
+      ],
+
+      workshop: [
+        '',
         Validators.required,
-        Validators.min(0),
       ],
-    ],
-    workshop: ['', Validators.required],
-    status: ['Planifiée', Validators.required],
-  });
+
+      status: [
+        'Planifiée',
+        Validators.required,
+      ],
+    });
 
   toggleForm(): void {
     if (this.showForm) {
@@ -150,16 +141,21 @@ export class Maintenance {
       return;
     }
 
-    const formValue = this.maintenanceForm.getRawValue();
+    const formValue =
+      this.maintenanceForm.getRawValue();
 
-    const maintenanceAlreadyExists = this.dataSource.data.some(
-      maintenance =>
-        maintenance.id !== this.editingMaintenanceId &&
-        maintenance.truck === formValue.truck &&
-        maintenance.maintenanceType.toLowerCase() ===
-          formValue.maintenanceType.trim().toLowerCase() &&
-        maintenance.scheduledDate === formValue.scheduledDate
-    );
+    const truck = formValue.truck.trim();
+
+    const maintenanceType =
+      formValue.maintenanceType.trim();
+
+    const maintenanceAlreadyExists =
+      this.maintenanceService.maintenanceExists(
+        truck,
+        maintenanceType,
+        formValue.scheduledDate,
+        this.editingMaintenanceId
+      );
 
     if (maintenanceAlreadyExists) {
       alert(
@@ -168,49 +164,56 @@ export class Maintenance {
       return;
     }
 
-    const maintenanceData: Omit<MaintenanceRecord, 'id'> = {
-      truck: formValue.truck,
-      maintenanceType: formValue.maintenanceType.trim(),
-      description: formValue.description.trim(),
-      scheduledDate: formValue.scheduledDate,
+    const maintenanceData: Omit<
+      MaintenanceRecord,
+      'id'
+    > = {
+      truck,
+      maintenanceType,
+      description:
+        formValue.description.trim(),
+      scheduledDate:
+        formValue.scheduledDate,
       mileage: formValue.mileage,
       cost: formValue.cost,
-      workshop: formValue.workshop.trim(),
-      status: formValue.status as MaintenanceRecord['status'],
+      workshop:
+        formValue.workshop.trim(),
+      status:
+        formValue.status as MaintenanceRecord['status'],
     };
 
-    if (this.editingMaintenanceId !== null) {
-      this.dataSource.data = this.dataSource.data.map(maintenance =>
-        maintenance.id === this.editingMaintenanceId
-          ? {
-              id: maintenance.id,
-              ...maintenanceData,
-            }
-          : maintenance
+    if (
+      this.editingMaintenanceId !== null
+    ) {
+      this.maintenanceService.update(
+        this.editingMaintenanceId,
+        maintenanceData
       );
     } else {
-      const newMaintenance: MaintenanceRecord = {
-        id: this.getNextId(),
-        ...maintenanceData,
-      };
-
-      this.dataSource.data = [
-        ...this.dataSource.data,
-        newMaintenance,
-      ];
+      this.maintenanceService.add(
+        maintenanceData
+      );
     }
 
+    this.refreshMaintenanceRecords();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const value =
+      (event.target as HTMLInputElement)
+        .value;
 
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
-  viewMaintenance(maintenance: MaintenanceRecord): void {
-    this.selectedMaintenance = maintenance;
+  viewMaintenance(
+    maintenance: MaintenanceRecord
+  ): void {
+    this.selectedMaintenance =
+      maintenance;
+
     this.showForm = false;
     this.editingMaintenanceId = null;
   }
@@ -219,16 +222,24 @@ export class Maintenance {
     this.selectedMaintenance = null;
   }
 
-  editMaintenance(maintenance: MaintenanceRecord): void {
+  editMaintenance(
+    maintenance: MaintenanceRecord
+  ): void {
     this.selectedMaintenance = null;
-    this.editingMaintenanceId = maintenance.id;
+
+    this.editingMaintenanceId =
+      maintenance.id;
+
     this.showForm = true;
 
     this.maintenanceForm.setValue({
       truck: maintenance.truck,
-      maintenanceType: maintenance.maintenanceType,
-      description: maintenance.description,
-      scheduledDate: maintenance.scheduledDate,
+      maintenanceType:
+        maintenance.maintenanceType,
+      description:
+        maintenance.description,
+      scheduledDate:
+        maintenance.scheduledDate,
       mileage: maintenance.mileage,
       cost: maintenance.cost,
       workshop: maintenance.workshop,
@@ -236,7 +247,9 @@ export class Maintenance {
     });
   }
 
-  deleteMaintenance(maintenance: MaintenanceRecord): void {
+  deleteMaintenance(
+    maintenance: MaintenanceRecord
+  ): void {
     const confirmation = confirm(
       `Voulez-vous vraiment supprimer la maintenance du camion ${maintenance.truck} ?`
     );
@@ -245,26 +258,30 @@ export class Maintenance {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentMaintenance =>
-        currentMaintenance.id !== maintenance.id
+    this.maintenanceService.delete(
+      maintenance.id
     );
 
-    if (this.selectedMaintenance?.id === maintenance.id) {
+    this.refreshMaintenanceRecords();
+
+    if (
+      this.selectedMaintenance?.id ===
+      maintenance.id
+    ) {
       this.selectedMaintenance = null;
     }
 
-    if (this.editingMaintenanceId === maintenance.id) {
+    if (
+      this.editingMaintenanceId ===
+      maintenance.id
+    ) {
       this.closeForm();
     }
   }
 
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(
-      maintenance => maintenance.id
-    );
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshMaintenanceRecords(): void {
+    this.dataSource.data =
+      this.maintenanceService.getAll();
   }
 
   private resetForm(): void {
