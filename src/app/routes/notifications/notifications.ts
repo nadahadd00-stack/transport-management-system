@@ -9,23 +9,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTableModule,
+} from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-interface NotificationRecord {
-  id: number;
-  title: string;
-  message: string;
-  type:
-    | 'Expédition'
-    | 'Maintenance'
-    | 'Camion'
-    | 'Chauffeur'
-    | 'Système';
-  priority: 'Faible' | 'Moyenne' | 'Élevée';
-  createdAt: string;
-  status: 'Lue' | 'Non lue';
-}
+import {
+  NotificationRecord,
+  NotificationsService,
+} from '../../core/services/notifications';
 
 @Component({
   selector: 'app-notifications',
@@ -45,8 +38,14 @@ interface NotificationRecord {
 export class Notifications {
   private readonly formBuilder = inject(FormBuilder);
 
+  private readonly notificationsService =
+    inject(NotificationsService);
+
   showForm = false;
-  selectedNotification: NotificationRecord | null = null;
+
+  selectedNotification: NotificationRecord | null =
+    null;
+
   editingNotificationId: number | null = null;
 
   displayedColumns: string[] = [
@@ -58,63 +57,54 @@ export class Notifications {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<NotificationRecord>([
-    {
-      id: 1,
-      title: 'Expédition livrée',
-      message:
-        'L’expédition EXP-2026-001 a été livrée avec succès à Rabat.',
-      type: 'Expédition',
-      priority: 'Faible',
-      createdAt: '2026-07-26T14:30',
-      status: 'Lue',
-    },
-    {
-      id: 2,
-      title: 'Maintenance en cours',
-      message:
-        'Le camion 67890-B-7 est actuellement en maintenance au garage.',
-      type: 'Maintenance',
-      priority: 'Moyenne',
-      createdAt: '2026-07-28T10:15',
-      status: 'Non lue',
-    },
-    {
-      id: 3,
-      title: 'Expédition retardée',
-      message:
-        'L’expédition EXP-2026-002 présente un retard sur le trajet vers Marrakech.',
-      type: 'Expédition',
-      priority: 'Élevée',
-      createdAt: '2026-07-28T13:45',
-      status: 'Non lue',
-    },
-  ]);
+  dataSource =
+    new MatTableDataSource<NotificationRecord>(
+      this.notificationsService.getAll()
+    );
 
-  notificationForm = this.formBuilder.nonNullable.group({
-    title: [
-      '',
-      [
-        Validators.required,
-        Validators.minLength(3),
+  notificationForm =
+    this.formBuilder.nonNullable.group({
+      title: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+        ],
       ],
-    ],
-    message: [
-      '',
-      [
-        Validators.required,
-        Validators.minLength(5),
+
+      message: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(5),
+        ],
       ],
-    ],
-    type: ['Système', Validators.required],
-    priority: ['Moyenne', Validators.required],
-    createdAt: ['', Validators.required],
-    status: ['Non lue', Validators.required],
-  });
+
+      type: [
+        'Système',
+        Validators.required,
+      ],
+
+      priority: [
+        'Moyenne',
+        Validators.required,
+      ],
+
+      createdAt: [
+        '',
+        Validators.required,
+      ],
+
+      status: [
+        'Non lue',
+        Validators.required,
+      ],
+    });
 
   get unreadCount(): number {
     return this.dataSource.data.filter(
-      notification => notification.status === 'Non lue'
+      notification =>
+        notification.status === 'Non lue'
     ).length;
   }
 
@@ -146,54 +136,68 @@ export class Notifications {
       return;
     }
 
-    const formValue = this.notificationForm.getRawValue();
+    const formValue =
+      this.notificationForm.getRawValue();
 
-    const notificationData: Omit<NotificationRecord, 'id'> = {
+    const notificationData: Omit<
+      NotificationRecord,
+      'id'
+    > = {
       title: formValue.title.trim(),
       message: formValue.message.trim(),
-      type: formValue.type as NotificationRecord['type'],
-      priority: formValue.priority as NotificationRecord['priority'],
+
+      type:
+        formValue.type as NotificationRecord['type'],
+
+      priority:
+        formValue.priority as NotificationRecord['priority'],
+
       createdAt: formValue.createdAt,
-      status: formValue.status as NotificationRecord['status'],
+
+      status:
+        formValue.status as NotificationRecord['status'],
     };
 
-    if (this.editingNotificationId !== null) {
-      this.dataSource.data = this.dataSource.data.map(notification =>
-        notification.id === this.editingNotificationId
-          ? {
-              id: notification.id,
-              ...notificationData,
-            }
-          : notification
+    if (
+      this.editingNotificationId !== null
+    ) {
+      this.notificationsService.update(
+        this.editingNotificationId,
+        notificationData
       );
     } else {
-      const newNotification: NotificationRecord = {
-        id: this.getNextId(),
-        ...notificationData,
-      };
-
-      this.dataSource.data = [
-        ...this.dataSource.data,
-        newNotification,
-      ];
+      this.notificationsService.add(
+        notificationData
+      );
     }
 
+    this.refreshNotifications();
     this.closeForm();
   }
 
   applyFilter(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const value =
+      (event.target as HTMLInputElement).value;
 
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.dataSource.filter =
+      value.trim().toLowerCase();
   }
 
-  viewNotification(notification: NotificationRecord): void {
+  viewNotification(
+    notification: NotificationRecord
+  ): void {
     this.selectedNotification = notification;
     this.showForm = false;
     this.editingNotificationId = null;
 
     if (notification.status === 'Non lue') {
-      this.updateNotificationStatus(notification.id, 'Lue');
+      this.notificationsService.updateStatus(
+        notification.id,
+        'Lue'
+      );
+
+      this.refreshNotifications();
+
       this.selectedNotification = {
         ...notification,
         status: 'Lue',
@@ -205,9 +209,14 @@ export class Notifications {
     this.selectedNotification = null;
   }
 
-  editNotification(notification: NotificationRecord): void {
+  editNotification(
+    notification: NotificationRecord
+  ): void {
     this.selectedNotification = null;
-    this.editingNotificationId = notification.id;
+
+    this.editingNotificationId =
+      notification.id;
+
     this.showForm = true;
 
     this.notificationForm.setValue({
@@ -220,13 +229,25 @@ export class Notifications {
     });
   }
 
-  toggleReadStatus(notification: NotificationRecord): void {
+  toggleReadStatus(
+    notification: NotificationRecord
+  ): void {
     const newStatus: NotificationRecord['status'] =
-      notification.status === 'Lue' ? 'Non lue' : 'Lue';
+      notification.status === 'Lue'
+        ? 'Non lue'
+        : 'Lue';
 
-    this.updateNotificationStatus(notification.id, newStatus);
+    this.notificationsService.updateStatus(
+      notification.id,
+      newStatus
+    );
 
-    if (this.selectedNotification?.id === notification.id) {
+    this.refreshNotifications();
+
+    if (
+      this.selectedNotification?.id ===
+      notification.id
+    ) {
       this.selectedNotification = {
         ...this.selectedNotification,
         status: newStatus,
@@ -235,10 +256,8 @@ export class Notifications {
   }
 
   markAllAsRead(): void {
-    this.dataSource.data = this.dataSource.data.map(notification => ({
-      ...notification,
-      status: 'Lue',
-    }));
+    this.notificationsService.markAllAsRead();
+    this.refreshNotifications();
 
     if (this.selectedNotification) {
       this.selectedNotification = {
@@ -248,7 +267,9 @@ export class Notifications {
     }
   }
 
-  deleteNotification(notification: NotificationRecord): void {
+  deleteNotification(
+    notification: NotificationRecord
+  ): void {
     const confirmation = confirm(
       `Voulez-vous vraiment supprimer la notification « ${notification.title} » ?`
     );
@@ -257,40 +278,30 @@ export class Notifications {
       return;
     }
 
-    this.dataSource.data = this.dataSource.data.filter(
-      currentNotification =>
-        currentNotification.id !== notification.id
+    this.notificationsService.delete(
+      notification.id
     );
 
-    if (this.selectedNotification?.id === notification.id) {
+    this.refreshNotifications();
+
+    if (
+      this.selectedNotification?.id ===
+      notification.id
+    ) {
       this.selectedNotification = null;
     }
 
-    if (this.editingNotificationId === notification.id) {
+    if (
+      this.editingNotificationId ===
+      notification.id
+    ) {
       this.closeForm();
     }
   }
 
-  private updateNotificationStatus(
-    notificationId: number,
-    status: NotificationRecord['status']
-  ): void {
-    this.dataSource.data = this.dataSource.data.map(notification =>
-      notification.id === notificationId
-        ? {
-            ...notification,
-            status,
-          }
-        : notification
-    );
-  }
-
-  private getNextId(): number {
-    const ids = this.dataSource.data.map(
-      notification => notification.id
-    );
-
-    return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  private refreshNotifications(): void {
+    this.dataSource.data =
+      this.notificationsService.getAll();
   }
 
   private resetForm(): void {
