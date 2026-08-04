@@ -41,18 +41,13 @@
           <mat-label>Camion</mat-label>
 
           <mat-select formControlName="truck">
-            <mat-option value="12345-A-6">
-              12345-A-6
-            </mat-option>
-
-            <mat-option value="67890-B-7">
-              67890-B-7
-            </mat-option>
-
-            <mat-option value="11223-C-8">
-              11223-C-8
-            </mat-option>
-          </mat-select>
+        @for (truck of trucks; track truck.id) {
+       <mat-option [value]="truck.registrationNumber">
+      {{ truck.registrationNumber }} —
+      {{ truck.brand }} {{ truck.model }}
+      </mat-option>
+       }
+      </mat-select>
 
           @if (
             maintenanceForm.controls.truck.touched &&

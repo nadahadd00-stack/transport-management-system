@@ -20,6 +20,11 @@ import {
   MaintenanceService,
 } from '../../core/services/maintenance';
 
+import {
+  Truck,
+  TrucksService,
+} from '../../core/services/trucks';
+
 @Component({
   selector: 'app-maintenance',
   imports: [
@@ -36,10 +41,17 @@ import {
   styleUrl: './maintenance.scss',
 })
 export class Maintenance {
-  private readonly formBuilder = inject(FormBuilder);
+  private readonly formBuilder =
+    inject(FormBuilder);
 
   private readonly maintenanceService =
     inject(MaintenanceService);
+
+  private readonly trucksService =
+    inject(TrucksService);
+
+  trucks: Truck[] =
+    this.trucksService.getAll();
 
   showForm = false;
 
@@ -123,6 +135,8 @@ export class Maintenance {
   }
 
   openAddForm(): void {
+    this.refreshTrucks();
+
     this.editingMaintenanceId = null;
     this.selectedMaintenance = null;
     this.resetForm();
@@ -225,6 +239,8 @@ export class Maintenance {
   editMaintenance(
     maintenance: MaintenanceRecord
   ): void {
+    this.refreshTrucks();
+
     this.selectedMaintenance = null;
 
     this.editingMaintenanceId =
@@ -282,6 +298,11 @@ export class Maintenance {
   private refreshMaintenanceRecords(): void {
     this.dataSource.data =
       this.maintenanceService.getAll();
+  }
+
+  private refreshTrucks(): void {
+    this.trucks =
+      this.trucksService.getAll();
   }
 
   private resetForm(): void {
