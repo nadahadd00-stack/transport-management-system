@@ -50,8 +50,7 @@ export class Maintenance {
   private readonly trucksService =
     inject(TrucksService);
 
-  trucks: Truck[] =
-    this.trucksService.getAll();
+  trucks: Truck[] = [];
 
   showForm = false;
 
@@ -301,9 +300,20 @@ export class Maintenance {
   }
 
   private refreshTrucks(): void {
-    this.trucks =
-      this.trucksService.getAll();
-  }
+
+  this.trucksService
+    .getAll()
+    .subscribe({
+
+      next:(data:Truck[])=>{
+
+        this.trucks = data;
+
+      }
+
+    });
+
+}
 
   private resetForm(): void {
     this.maintenanceForm.reset({

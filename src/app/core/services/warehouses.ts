@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 
 export interface Warehouse {
   id: number;
@@ -6,182 +8,245 @@ export interface Warehouse {
   city: string;
   address: string;
   capacity: number;
-  managerName: string;
-  phone: string;
-  status: 'Actif' | 'Complet' | 'Maintenance' | 'Inactif';
+  status:
+    | 'Actif'
+    | 'Complet'
+    | 'Maintenance'
+    | 'Inactif';
 }
 
-const STORAGE_KEY = 'tms_warehouses';
-
-const DEFAULT_WAREHOUSES: Warehouse[] = [
-  {
-    id: 1,
-    name: 'Entrepôt Casablanca',
-    city: 'Casablanca',
-    address: 'Zone Industrielle Aïn Sebaâ',
-    capacity: 5000,
-    managerName: 'Karim Alaoui',
-    phone: '0611223344',
-    status: 'Actif',
-  },
-  {
-    id: 2,
-    name: 'Entrepôt Tanger',
-    city: 'Tanger',
-    address: 'Zone Franche de Tanger',
-    capacity: 3500,
-    managerName: 'Nadia Benali',
-    phone: '0622334455',
-    status: 'Complet',
-  },
-  {
-    id: 3,
-    name: 'Entrepôt Marrakech',
-    city: 'Marrakech',
-    address: 'Zone Industrielle Sidi Ghanem',
-    capacity: 2800,
-    managerName: 'Omar El Idrissi',
-    phone: '0633445566',
-    status: 'Maintenance',
-  },
-];
+interface BackendWarehouse {
+  id: number;
+  name: string;
+  city: string;
+  address: string;
+  capacity: number;
+  status: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class WarehousesService {
-  private warehouses: Warehouse[] = this.loadWarehouses();
 
-  getAll(): Warehouse[] {
-    return this.warehouses.map(warehouse => ({
-      ...warehouse,
-    }));
+  private readonly http = inject(HttpClient);
+
+  private readonly apiUrl =
+    'http://localhost:8081/entrepots';
+
+  // =====================================================
+  // GET ALL
+  // =====================================================
+
+  getAll(): Observable<Warehouse[]> {
+
+    return this.http
+      .get<BackendWarehouse[]>(this.apiUrl)
+      .pipe(
+        map(entrepots =>
+          entrepots.map(entrepot => ({
+            id: entrepot.id,
+            name: entrepot.name,
+            city: entrepot.city,
+            address: entrepot.address,
+            capacity: entrepot.capacity,
+            status: this.convertStatus(
+              entrepot.status
+            ),
+          }))
+        )
+      );
   }
+
+  // =====================================================
+  // GET BY ID
+  // =====================================================
+
+  getById(
+    id: number
+  ): Observable<Warehouse> {
+
+    return this.http
+      .get<BackendWarehouse>(
+        `${this.apiUrl}/${id}`
+      )
+      .pipe(
+        map(entrepot => ({
+          id: entrepot.id,
+          name: entrepot.name,
+          city: entrepot.city,
+          address: entrepot.address,
+          capacity: entrepot.capacity,
+          status: this.convertStatus(
+            entrepot.status
+          ),
+        }))
+      );
+  }
+
+  // =====================================================
+  // ADD
+  // =====================================================
 
   add(
     warehouseData: Omit<Warehouse, 'id'>
-  ): Warehouse {
-    const newWarehouse: Warehouse = {
-      id: this.getNextId(),
-      ...warehouseData,
+  ): Observable<Warehouse> {
+
+    const body = {
+      name: warehouseData.name,
+      city: warehouseData.city,
+      address: warehouseData.address,
+      capacity: warehouseData.capacity,
+      status: this.convertStatusToBackend(
+        warehouseData.status
+      ),
     };
 
-    this.warehouses = [
-      ...this.warehouses,
-      newWarehouse,
-    ];
-
-    this.saveWarehouses();
-
-    return {
-      ...newWarehouse,
-    };
+    return this.http.post<BackendWarehouse>(
+      this.apiUrl,
+      body
+    ).pipe(
+      map(entrepot => ({
+        id: entrepot.id,
+        name: entrepot.name,
+        city: entrepot.city,
+        address: entrepot.address,
+        capacity: entrepot.capacity,
+        status: this.convertStatus(
+          entrepot.status
+        ),
+      }))
+    );
   }
+
+  // =====================================================
+  // UPDATE
+  // =====================================================
 
   update(
     warehouseId: number,
     warehouseData: Omit<Warehouse, 'id'>
-  ): Warehouse | undefined {
-    const warehouseExists = this.warehouses.some(
-      warehouse => warehouse.id === warehouseId
-    );
+  ): Observable<Warehouse> {
 
-    if (!warehouseExists) {
-      return undefined;
-    }
-
-    const updatedWarehouse: Warehouse = {
-      id: warehouseId,
-      ...warehouseData,
+    const body = {
+      name: warehouseData.name,
+      city: warehouseData.city,
+      address: warehouseData.address,
+      capacity: warehouseData.capacity,
+      status: this.convertStatusToBackend(
+        warehouseData.status
+      ),
     };
 
-    this.warehouses = this.warehouses.map(warehouse =>
-      warehouse.id === warehouseId
-        ? updatedWarehouse
-        : warehouse
+    return this.http.put<BackendWarehouse>(
+      `${this.apiUrl}/${warehouseId}`,
+      body
+    ).pipe(
+      map(entrepot => ({
+        id: entrepot.id,
+        name: entrepot.name,
+        city: entrepot.city,
+        address: entrepot.address,
+        capacity: entrepot.capacity,
+        status: this.convertStatus(
+          entrepot.status
+        ),
+      }))
     );
-
-    this.saveWarehouses();
-
-    return {
-      ...updatedWarehouse,
-    };
   }
 
-  delete(warehouseId: number): void {
-    this.warehouses = this.warehouses.filter(
-      warehouse => warehouse.id !== warehouseId
-    );
+  // =====================================================
+  // DELETE
+  // =====================================================
 
-    this.saveWarehouses();
+  delete(
+    warehouseId: number
+  ): Observable<string> {
+
+    return this.http.delete(
+      `${this.apiUrl}/${warehouseId}`,
+      {
+        responseType: 'text',
+      }
+    );
   }
+
+  // =====================================================
+  // CHECK NAME
+  // =====================================================
 
   nameExists(
     name: string,
     excludedWarehouseId: number | null = null
   ): boolean {
-    const normalizedName =
-      name.trim().toLowerCase();
 
-    return this.warehouses.some(
-      warehouse =>
-        warehouse.id !== excludedWarehouseId &&
-        warehouse.name.trim().toLowerCase() ===
-          normalizedName
-    );
+    // Vérification locale désactivée car
+    // les données sont maintenant gérées par le backend.
+
+    return false;
   }
 
-  private getNextId(): number {
-    const ids = this.warehouses.map(
-      warehouse => warehouse.id
-    );
+  // =====================================================
+  // STATUS BACKEND -> FRONTEND
+  // =====================================================
 
-    return ids.length > 0
-      ? Math.max(...ids) + 1
-      : 1;
-  }
+  private convertStatus(
+    status: string
+  ):
+    | 'Actif'
+    | 'Complet'
+    | 'Maintenance'
+    | 'Inactif' {
 
-  private loadWarehouses(): Warehouse[] {
-    const savedWarehouses =
-      localStorage.getItem(STORAGE_KEY);
+    switch (
+      status?.trim().toUpperCase()
+    ) {
 
-    if (!savedWarehouses) {
-      this.saveDefaultWarehouses();
+      case 'ACTIF':
+        return 'Actif';
 
-      return DEFAULT_WAREHOUSES.map(warehouse => ({
-        ...warehouse,
-      }));
-    }
+      case 'COMPLET':
+        return 'Complet';
 
-    try {
-      const parsedWarehouses =
-        JSON.parse(savedWarehouses) as Warehouse[];
+      case 'MAINTENANCE':
+        return 'Maintenance';
 
-      if (!Array.isArray(parsedWarehouses)) {
-        throw new Error('Format invalide');
-      }
+      case 'INACTIF':
+        return 'Inactif';
 
-      return parsedWarehouses;
-    } catch {
-      this.saveDefaultWarehouses();
-
-      return DEFAULT_WAREHOUSES.map(warehouse => ({
-        ...warehouse,
-      }));
+      default:
+        return 'Inactif';
     }
   }
 
-  private saveWarehouses(): void {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(this.warehouses)
-    );
-  }
+  // =====================================================
+  // STATUS FRONTEND -> BACKEND
+  // =====================================================
 
-  private saveDefaultWarehouses(): void {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(DEFAULT_WAREHOUSES)
-    );
+  private convertStatusToBackend(
+    status:
+      | 'Actif'
+      | 'Complet'
+      | 'Maintenance'
+      | 'Inactif'
+  ): string {
+
+    switch (status) {
+
+      case 'Actif':
+        return 'ACTIF';
+
+      case 'Complet':
+        return 'COMPLET';
+
+      case 'Maintenance':
+        return 'MAINTENANCE';
+
+      case 'Inactif':
+        return 'INACTIF';
+
+      default:
+        return 'INACTIF';
+    }
   }
 }

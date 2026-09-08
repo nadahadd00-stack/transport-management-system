@@ -1,18 +1,22 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+
 import {
   MatTableDataSource,
   MatTableModule,
 } from '@angular/material/table';
+
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
@@ -20,8 +24,10 @@ import {
   CustomersService,
 } from '../../core/services/customers';
 
+
 @Component({
   selector: 'app-customers',
+
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
@@ -32,16 +38,30 @@ import {
     MatTableModule,
     MatTooltipModule,
   ],
+
   templateUrl: './customers.html',
+
   styleUrl: './customers.scss',
 })
-export class Customers {
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly customersService = inject(CustomersService);
+
+
+export class Customers implements OnInit {
+
+  private readonly formBuilder =
+    inject(FormBuilder);
+
+  private readonly customersService =
+    inject(CustomersService);
+
+
+  customers: Customer[] = [];
 
   showForm = false;
+
   selectedCustomer: Customer | null = null;
+
   editingCustomerId: number | null = null;
+
 
   displayedColumns: string[] = [
     'companyName',
@@ -53,171 +73,460 @@ export class Customers {
     'actions',
   ];
 
-  dataSource = new MatTableDataSource<Customer>(
-    this.customersService.getAll()
-  );
 
-  customerForm = this.formBuilder.nonNullable.group({
-    companyName: ['', Validators.required],
-    contactName: ['', Validators.required],
-    phone: [
-      '',
-      [
+  dataSource =
+    new MatTableDataSource<Customer>([]);
+
+
+  customerForm =
+    this.formBuilder.nonNullable.group({
+
+      companyName: [
+        '',
         Validators.required,
-        Validators.pattern(/^[0-9]{10}$/),
       ],
-    ],
-    email: [
-      '',
-      [
+
+      contactName: [
+        '',
         Validators.required,
-        Validators.email,
       ],
-    ],
-    city: ['', Validators.required],
-    address: ['', Validators.required],
-    status: ['Actif', Validators.required],
-  });
+
+      phone: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^[0-9]{10}$/),
+        ],
+      ],
+
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.email,
+        ],
+      ],
+
+      city: [
+        '',
+        Validators.required,
+      ],
+
+      address: [
+        '',
+        Validators.required,
+      ],
+
+      status: [
+        'Actif',
+        Validators.required,
+      ],
+
+    });
+
+
+  // =====================================================
+  // INITIALISATION
+  // =====================================================
+
+  ngOnInit(): void {
+
+    this.loadCustomers();
+
+  }
+
+
+  // =====================================================
+  // LOAD CUSTOMERS FROM BACKEND
+  // =====================================================
+
+  private loadCustomers(): void {
+
+    this.customersService
+      .getAll()
+      .subscribe({
+
+        next: (data: Customer[]) => {
+
+          this.customers = data;
+
+          this.dataSource.data = data;
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Erreur lors du chargement des clients :',
+            error
+          );
+
+          alert(
+            'Impossible de charger les clients depuis le backend.'
+          );
+
+        },
+
+      });
+
+  }
+
+
+  // =====================================================
+  // TOGGLE FORM
+  // =====================================================
 
   toggleForm(): void {
+
     if (this.showForm) {
+
       this.closeForm();
+
       return;
+
     }
 
     this.openAddForm();
+
   }
+
+
+  // =====================================================
+  // OPEN ADD FORM
+  // =====================================================
 
   openAddForm(): void {
+
     this.editingCustomerId = null;
+
     this.selectedCustomer = null;
+
     this.resetForm();
+
     this.showForm = true;
+
   }
+
+
+  // =====================================================
+  // CLOSE FORM
+  // =====================================================
 
   closeForm(): void {
+
     this.showForm = false;
+
     this.editingCustomerId = null;
+
     this.resetForm();
+
   }
+
+
+  // =====================================================
+  // SAVE CUSTOMER
+  // =====================================================
 
   saveCustomer(): void {
+
     if (this.customerForm.invalid) {
+
       this.customerForm.markAllAsTouched();
+
       return;
+
     }
 
-    const formValue = this.customerForm.getRawValue();
 
-    const email = formValue.email
-      .trim()
-      .toLowerCase();
+    const formValue =
+      this.customerForm.getRawValue();
 
-    const emailAlreadyExists =
-      this.customersService.emailExists(
-        email,
-        this.editingCustomerId
-      );
 
-    if (emailAlreadyExists) {
-      alert(
-        'Un client avec cette adresse e-mail existe déjà.'
-      );
-      return;
-    }
+    const customerData:
+      Omit<Customer, 'id'> = {
 
-    const customerData: Omit<Customer, 'id'> = {
-      companyName: formValue.companyName.trim(),
-      contactName: formValue.contactName.trim(),
-      phone: formValue.phone.trim(),
-      email,
-      city: formValue.city.trim(),
-      address: formValue.address.trim(),
-      status: formValue.status as Customer['status'],
+      companyName:
+        formValue.companyName.trim(),
+
+      contactName:
+        formValue.contactName.trim(),
+
+      phone:
+        formValue.phone.trim(),
+
+      email:
+        formValue.email
+          .trim()
+          .toLowerCase(),
+
+      city:
+        formValue.city.trim(),
+
+      address:
+        formValue.address.trim(),
+
+      status:
+        formValue.status as Customer['status'],
+
     };
 
+
+    // ===================================================
+    // UPDATE CUSTOMER
+    // ===================================================
+
     if (this.editingCustomerId !== null) {
-      this.customersService.update(
-        this.editingCustomerId,
-        customerData
-      );
-    } else {
-      this.customersService.add(customerData);
+
+      this.customersService
+        .update(
+          this.editingCustomerId,
+          customerData
+        )
+        .subscribe({
+
+          next: () => {
+
+            this.loadCustomers();
+
+            this.closeForm();
+
+          },
+
+          error: (error) => {
+
+            console.error(
+              'Erreur modification client :',
+              error
+            );
+
+            alert(
+              'Erreur lors de la modification du client.'
+            );
+
+          },
+
+        });
+
+      return;
+
     }
 
-    this.refreshCustomers();
-    this.closeForm();
+
+    // ===================================================
+    // ADD CUSTOMER
+    // ===================================================
+
+    this.customersService
+      .add(customerData)
+      .subscribe({
+
+        next: () => {
+
+          this.loadCustomers();
+
+          this.closeForm();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Erreur ajout client :',
+            error
+          );
+
+          alert(
+            'Erreur lors de l’ajout du client.'
+          );
+
+        },
+
+      });
+
   }
 
+
+  // =====================================================
+  // FILTER
+  // =====================================================
+
   applyFilter(event: Event): void {
+
     const value =
       (event.target as HTMLInputElement).value;
 
     this.dataSource.filter =
       value.trim().toLowerCase();
+
   }
 
-  viewCustomer(customer: Customer): void {
-    this.selectedCustomer = customer;
+
+  // =====================================================
+  // VIEW CUSTOMER
+  // =====================================================
+
+  viewCustomer(
+    customer: Customer
+  ): void {
+
+    this.selectedCustomer =
+      customer;
+
     this.showForm = false;
+
     this.editingCustomerId = null;
+
   }
+
+
+  // =====================================================
+  // CLOSE CUSTOMER DETAILS
+  // =====================================================
 
   closeCustomerDetails(): void {
+
     this.selectedCustomer = null;
+
   }
 
-  editCustomer(customer: Customer): void {
+
+  // =====================================================
+  // EDIT CUSTOMER
+  // =====================================================
+
+  editCustomer(
+    customer: Customer
+  ): void {
+
     this.selectedCustomer = null;
-    this.editingCustomerId = customer.id;
+
+    this.editingCustomerId =
+      customer.id;
+
     this.showForm = true;
 
+
     this.customerForm.setValue({
-      companyName: customer.companyName,
-      contactName: customer.contactName,
-      phone: customer.phone,
-      email: customer.email,
-      city: customer.city,
-      address: customer.address,
-      status: customer.status,
+
+      companyName:
+        customer.companyName,
+
+      contactName:
+        customer.contactName,
+
+      phone:
+        customer.phone,
+
+      email:
+        customer.email,
+
+      city:
+        customer.city,
+
+      address:
+        customer.address,
+
+      status:
+        customer.status,
+
     });
+
   }
 
-  deleteCustomer(customer: Customer): void {
-    const confirmation = confirm(
-      `Voulez-vous vraiment supprimer le client ${customer.companyName} ?`
-    );
+
+  // =====================================================
+  // DELETE CUSTOMER
+  // =====================================================
+
+  deleteCustomer(
+    customer: Customer
+  ): void {
+
+    const confirmation =
+      confirm(
+        `Voulez-vous vraiment supprimer le client ${customer.companyName} ?`
+      );
+
 
     if (!confirmation) {
+
       return;
+
     }
 
-    this.customersService.delete(customer.id);
-    this.refreshCustomers();
 
-    if (this.selectedCustomer?.id === customer.id) {
-      this.selectedCustomer = null;
-    }
+    this.customersService
+      .delete(customer.id)
+      .subscribe({
 
-    if (this.editingCustomerId === customer.id) {
-      this.closeForm();
-    }
+        next: () => {
+
+          this.loadCustomers();
+
+
+          if (
+            this.selectedCustomer?.id ===
+            customer.id
+          ) {
+
+            this.selectedCustomer = null;
+
+          }
+
+
+          if (
+            this.editingCustomerId ===
+            customer.id
+          ) {
+
+            this.closeForm();
+
+          }
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Erreur suppression client :',
+            error
+          );
+
+          alert(
+            'Erreur lors de la suppression du client.'
+          );
+
+        },
+
+      });
+
   }
 
-  private refreshCustomers(): void {
-    this.dataSource.data =
-      this.customersService.getAll();
-  }
+
+  // =====================================================
+  // RESET FORM
+  // =====================================================
 
   private resetForm(): void {
+
     this.customerForm.reset({
+
       companyName: '',
+
       contactName: '',
+
       phone: '',
+
       email: '',
+
       city: '',
+
       address: '',
+
       status: 'Actif',
+
     });
+
   }
+
 }

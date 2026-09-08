@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 
 export interface Driver {
   id: number;
@@ -15,190 +17,299 @@ export interface Driver {
     | 'Indisponible';
 }
 
-const STORAGE_KEY = 'tms_drivers';
-
-const DEFAULT_DRIVERS: Driver[] = [
-  {
-    id: 1,
-    fullName: 'Youssef El Amrani',
-    cin: 'AB123456',
-    phone: '0612345678',
-    licenseNumber: 'PC-10001',
-    licenseCategory: 'C',
-    experienceYears: 8,
-    status: 'Disponible',
-  },
-  {
-    id: 2,
-    fullName: 'Hamza Benali',
-    cin: 'CD789012',
-    phone: '0623456789',
-    licenseNumber: 'PC-10002',
-    licenseCategory: 'CE',
-    experienceYears: 5,
-    status: 'En mission',
-  },
-  {
-    id: 3,
-    fullName: 'Omar Alaoui',
-    cin: 'EF345678',
-    phone: '0634567890',
-    licenseNumber: 'PC-10003',
-    licenseCategory: 'C',
-    experienceYears: 12,
-    status: 'En congé',
-  },
-];
+interface BackendChauffeur {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  licenseNumber: string;
+  hireDate: string;
+  truckId: number | null;
+  status: string;
+}
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DriversService {
-  private drivers: Driver[] = this.loadDrivers();
 
-  getAll(): Driver[] {
-    return this.drivers.map(driver => ({
-      ...driver,
-    }));
+  private readonly http = inject(HttpClient);
+
+  private readonly apiUrl =
+    'http://localhost:8081/chauffeurs';
+
+
+  getAll(): Observable<Driver[]> {
+
+    return this.http
+      .get<BackendChauffeur[]>(this.apiUrl)
+      .pipe(
+
+        map(chauffeurs =>
+          chauffeurs.map(c => ({
+
+            id: c.id,
+
+            fullName:
+              `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(),
+
+            cin: '',
+
+            phone:
+              c.phone ?? '',
+
+            licenseNumber:
+              c.licenseNumber ?? '',
+
+            licenseCategory:
+              'C',
+
+            experienceYears:
+              0,
+
+            status:
+              this.convertStatus(c.status)
+
+          }))
+        )
+
+      );
+
   }
 
-  add(driverData: Omit<Driver, 'id'>): Driver {
-    const newDriver: Driver = {
-      id: this.getNextId(),
-      ...driverData,
+
+  add(
+    driver: Omit<Driver, 'id'>
+  ): Observable<any> {
+
+    const names =
+      driver.fullName
+        .trim()
+        .split(/\s+/);
+
+    const firstName =
+      names.shift() ?? '';
+
+    const lastName =
+      names.join(' ');
+
+    const body = {
+
+      firstName,
+
+      lastName,
+
+      phone:
+        driver.phone,
+
+      email:
+        '',
+
+      licenseNumber:
+        driver.licenseNumber,
+
+      hireDate:
+        new Date()
+          .toISOString()
+          .substring(0, 10),
+
+      truckId:
+        null,
+
+      status:
+        this.convertStatusToBackend(
+          driver.status
+        )
+
     };
 
-    this.drivers = [
-      ...this.drivers,
-      newDriver,
-    ];
+    return this.http.post(
+      this.apiUrl,
+      body
+    );
 
-    this.saveDrivers();
-
-    return {
-      ...newDriver,
-    };
   }
+
 
   update(
-    driverId: number,
-    driverData: Omit<Driver, 'id'>
-  ): Driver | undefined {
-    const driverExists = this.drivers.some(
-      driver => driver.id === driverId
-    );
+    id: number,
+    driver: Omit<Driver, 'id'>
+  ): Observable<any> {
 
-    if (!driverExists) {
-      return undefined;
-    }
+    const names =
+      driver.fullName
+        .trim()
+        .split(/\s+/);
 
-    const updatedDriver: Driver = {
-      id: driverId,
-      ...driverData,
+    const firstName =
+      names.shift() ?? '';
+
+    const lastName =
+      names.join(' ');
+
+    const body = {
+
+      firstName,
+
+      lastName,
+
+      phone:
+        driver.phone,
+
+      email:
+        '',
+
+      licenseNumber:
+        driver.licenseNumber,
+
+      hireDate:
+        new Date()
+          .toISOString()
+          .substring(0, 10),
+
+      truckId:
+        null,
+
+      status:
+        this.convertStatusToBackend(
+          driver.status
+        )
+
     };
 
-    this.drivers = this.drivers.map(driver =>
-      driver.id === driverId
-        ? updatedDriver
-        : driver
+    return this.http.put(
+      `${this.apiUrl}/${id}`,
+      body
     );
 
-    this.saveDrivers();
-
-    return {
-      ...updatedDriver,
-    };
   }
 
-  delete(driverId: number): void {
-    this.drivers = this.drivers.filter(
-      driver => driver.id !== driverId
+
+  delete(
+    id: number
+  ): Observable<any> {
+
+    return this.http.delete(
+      `${this.apiUrl}/${id}`
     );
 
-    this.saveDrivers();
   }
+
 
   cinExists(
     cin: string,
     excludedDriverId: number | null = null
   ): boolean {
-    const normalizedCin =
-      cin.trim().toLowerCase();
 
-    return this.drivers.some(
-      driver =>
-        driver.id !== excludedDriverId &&
-        driver.cin.trim().toLowerCase() ===
-          normalizedCin
-    );
+    return false;
+
   }
+
 
   licenseNumberExists(
     licenseNumber: string,
     excludedDriverId: number | null = null
   ): boolean {
-    const normalizedLicenseNumber =
-      licenseNumber.trim().toLowerCase();
 
-    return this.drivers.some(
-      driver =>
-        driver.id !== excludedDriverId &&
-        driver.licenseNumber.trim().toLowerCase() ===
-          normalizedLicenseNumber
-    );
+    return false;
+
   }
 
-  private getNextId(): number {
-    const ids = this.drivers.map(
-      driver => driver.id
-    );
 
-    return ids.length > 0
-      ? Math.max(...ids) + 1
-      : 1;
-  }
+  private convertStatus(
+    status: string | null | undefined
+  ): Driver['status'] {
 
-  private loadDrivers(): Driver[] {
-    const savedDrivers =
-      localStorage.getItem(STORAGE_KEY);
-
-    if (!savedDrivers) {
-      this.saveDefaultDrivers();
-
-      return DEFAULT_DRIVERS.map(driver => ({
-        ...driver,
-      }));
+    if (!status) {
+      return 'Indisponible';
     }
 
-    try {
-      const parsedDrivers =
-        JSON.parse(savedDrivers) as Driver[];
+    const normalized =
+      status
+        .trim()
+        .toUpperCase()
+        .replace(/É/g, 'E')
+        .replace(/È/g, 'E')
+        .replace(/Ê/g, 'E')
+        .replace(/À/g, 'A')
+        .replace(/Â/g, 'A')
+        .replace(/Î/g, 'I')
+        .replace(/Ô/g, 'O')
+        .replace(/Û/g, 'U')
+        .replace(/Ë/g, 'E')
+        .replace(/\s+/g, '_');
 
-      if (!Array.isArray(parsedDrivers)) {
-        throw new Error('Format invalide');
-      }
+    switch (normalized) {
 
-      return parsedDrivers;
-    } catch {
-      this.saveDefaultDrivers();
+      case 'DISPONIBLE':
+      case 'AVAILABLE':
+      case 'LIBRE':
+      case 'ACTIF':
+        return 'Disponible';
 
-      return DEFAULT_DRIVERS.map(driver => ({
-        ...driver,
-      }));
+      case 'EN_MISSION':
+      case 'MISSION':
+      case 'EN_SERVICE':
+      case 'ON_MISSION':
+      case 'BUSY':
+        return 'En mission';
+
+      case 'EN_CONGE':
+      case 'CONGE':
+      case 'CONGES':
+      case 'ON_LEAVE':
+      case 'LEAVE':
+        return 'En congé';
+
+      case 'INDISPONIBLE':
+      case 'UNAVAILABLE':
+      case 'INACTIF':
+      case 'INACTIVE':
+      case 'HORS_SERVICE':
+      case 'OUT_OF_SERVICE':
+        return 'Indisponible';
+
+      default:
+
+        if (
+          status === 'Disponible' ||
+          status === 'En mission' ||
+          status === 'En congé' ||
+          status === 'Indisponible'
+        ) {
+          return status;
+        }
+
+        return 'Indisponible';
     }
+
   }
 
-  private saveDrivers(): void {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(this.drivers)
-    );
+
+  private convertStatusToBackend(
+    status: Driver['status']
+  ): string {
+
+    switch (status) {
+
+      case 'Disponible':
+        return 'DISPONIBLE';
+
+      case 'En mission':
+        return 'EN_MISSION';
+
+      case 'En congé':
+        return 'EN_CONGE';
+
+      case 'Indisponible':
+        return 'INDISPONIBLE';
+
+      default:
+        return 'INDISPONIBLE';
+
+    }
+
   }
 
-  private saveDefaultDrivers(): void {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(DEFAULT_DRIVERS)
-    );
-  }
 }

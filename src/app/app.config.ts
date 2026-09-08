@@ -50,12 +50,15 @@ export const appConfig: ApplicationConfig = {
       withComponentInputBinding()
     ),
     provideHotToastConfig(),
-    provideTranslateService({
-      loader: provideTranslateHttpLoader({ prefix: 'i18n/', suffix: '.json' }),
-    }),
+   provideTranslateService({
+  loader: provideTranslateHttpLoader({
+    prefix: '/i18n/',
+    suffix: '.json'
+  }),
+}),
     importProvidersFrom(NgxPermissionsModule.forRoot()),
     // ==================================================
-    // 👇 ❌ Remove it in the realworld application
+   
     //
     { provide: LoginService, useClass: FakeLoginService },
     //

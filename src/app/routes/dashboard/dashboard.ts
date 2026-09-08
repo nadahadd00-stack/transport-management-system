@@ -1,17 +1,28 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { TrucksService } from '../../core/services/trucks';
-import { DriversService } from '../../core/services/drivers';
+import {
+  Truck,
+  TrucksService
+} from '../../core/services/trucks';
+
+import {
+  Driver,
+  DriversService
+} from '../../core/services/drivers';
+
 import { ShipmentsService } from '../../core/services/shipments';
 import { TrackingService } from '../../core/services/tracking';
 import { MaintenanceService } from '../../core/services/maintenance';
 import { NotificationsService } from '../../core/services/notifications';
+
+
 
 interface DashboardMetric {
   title: string;
@@ -22,6 +33,7 @@ interface DashboardMetric {
   route: string;
 }
 
+
 interface RecentShipment {
   reference: string;
   customer: string;
@@ -31,6 +43,7 @@ interface RecentShipment {
   status: string;
 }
 
+
 interface MaintenanceAlert {
   truck: string;
   maintenanceType: string;
@@ -38,6 +51,8 @@ interface MaintenanceAlert {
   workshop: string;
   status: string;
 }
+
+
 
 @Component({
   selector: 'app-dashboard',
@@ -52,42 +67,157 @@ interface MaintenanceAlert {
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
+
+
 export class Dashboard {
+
+
   private readonly trucksService =
     inject(TrucksService);
+
 
   private readonly driversService =
     inject(DriversService);
 
+
   private readonly shipmentsService =
     inject(ShipmentsService);
+
 
   private readonly trackingService =
     inject(TrackingService);
 
+
   private readonly maintenanceService =
     inject(MaintenanceService);
+
 
   private readonly notificationsService =
     inject(NotificationsService);
 
-  private readonly trucks =
-    this.trucksService.getAll();
 
-  private readonly drivers =
-    this.driversService.getAll();
 
-  private readonly shipments =
-    this.shipmentsService.getAll();
+  private trucks: Truck[] = [];
 
-  private readonly trackingRecords =
+
+  private drivers: Driver[] = [];
+
+
+  private shipments: any[] = [];
+
+
+  private trackingRecords: any[] = [];
+
+
+  private maintenanceRecords: any[] = [];
+
+
+  private notifications: any[] = [];
+
+
+
+  constructor() {
+
+    this.loadTrucks();
+    this.loadDrivers();
+    this.loadShipments();
+    this.loadTracking();
+    this.loadMaintenance();
+    this.loadNotifications();
+
+  }
+
+
+private loadTrucks(): void {
+
+  this.trucksService
+    .getAll()
+    .subscribe({
+
+      next: (data: Truck[]) => {
+
+        this.trucks = data;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Erreur chargement camions',
+          error
+        );
+
+      }
+
+    });
+
+}
+
+
+
+  private loadDrivers(): void {
+
+    this.driversService
+      .getAll()
+      .subscribe(data => {
+
+        this.drivers = data;
+
+      });
+
+  }
+
+
+private loadShipments(): void {
+
+  this.shipmentsService
+    .getAll()
+    .subscribe({
+
+      next: (data) => {
+
+        this.shipments = data;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Erreur chargement livraisons',
+          error
+        );
+
+      }
+
+    });
+
+}
+
+
+private loadTracking(): void {
+
+  this.trackingRecords =
     this.trackingService.getAll();
 
-  private readonly maintenanceRecords =
+}
+
+
+private loadMaintenance(): void {
+
+  this.maintenanceRecords =
     this.maintenanceService.getAll();
 
-  private readonly notifications =
+}
+
+
+private loadNotifications(): void {
+
+  this.notifications =
     this.notificationsService.getAll();
+
+}
+
+
 
   today = new Date().toLocaleDateString(
     'fr-FR',
@@ -99,83 +229,143 @@ export class Dashboard {
     }
   );
 
-  private readonly availableTrucks =
-    this.trucks.filter(
+
+
+  get availableTrucks(): number {
+
+    return this.trucks.filter(
       truck => truck.status === 'Disponible'
     ).length;
 
-  private readonly availableDrivers =
-    this.drivers.filter(
+  }
+
+
+
+  get availableDrivers(): number {
+
+    return this.drivers.filter(
       driver => driver.status === 'Disponible'
     ).length;
 
-  private readonly driversOnMission =
-    this.drivers.filter(
+  }
+
+
+
+  get driversOnMission(): number {
+
+    return this.drivers.filter(
       driver => driver.status === 'En mission'
     ).length;
 
-  private readonly shipmentsInTransit =
-    this.shipments.filter(
-      shipment =>
-        shipment.status === 'En transit'
+  }
+
+
+
+  get shipmentsInTransit(): number {
+
+    return this.shipments.filter(
+      shipment => shipment.status === 'En transit'
     ).length;
 
-  private readonly delayedShipments =
-    this.trackingRecords.filter(
-      tracking =>
-        tracking.status === 'Retardée'
+  }
+
+
+
+  get delayedShipments(): number {
+
+    return this.trackingRecords.filter(
+      tracking => tracking.status === 'Retardée'
     ).length;
 
-  private readonly deliveredShipments =
-    this.shipments.filter(
-      shipment =>
-        shipment.status === 'Livrée'
+  }
+
+
+
+  get deliveredShipments(): number {
+
+    return this.shipments.filter(
+      shipment => shipment.status === 'Livrée'
     ).length;
 
-  private readonly ongoingMaintenance =
-    this.maintenanceRecords.filter(
-      maintenance =>
-        maintenance.status === 'En cours'
+  }
+
+
+
+  get ongoingMaintenance(): number {
+
+    return this.maintenanceRecords.filter(
+      maintenance => maintenance.status === 'En cours'
     ).length;
 
-  private readonly plannedMaintenance =
-    this.maintenanceRecords.filter(
-      maintenance =>
-        maintenance.status === 'Planifiée'
+  }
+
+
+
+  get plannedMaintenance(): number {
+
+    return this.maintenanceRecords.filter(
+      maintenance => maintenance.status === 'Planifiée'
     ).length;
 
-  private readonly unreadNotifications =
-    this.notifications.filter(
-      notification =>
-        notification.status === 'Non lue'
+  }
+   get unreadNotifications(): number {
+
+    return this.notifications.filter(
+      notification => notification.status === 'Non lue'
     ).length;
 
-  private readonly priorityAlerts =
-    this.notifications.filter(
+  }
+
+
+
+  get priorityAlerts(): number {
+
+    return this.notifications.filter(
       notification =>
         notification.status === 'Non lue' &&
         notification.priority === 'Élevée'
     ).length;
 
-  deliveryRate =
-    this.shipments.length > 0
+  }
+
+
+
+  get deliveryRate(): number {
+
+    return this.shipments.length > 0
       ? Math.round(
           (this.deliveredShipments /
-            this.shipments.length) *
-            100
+            this.shipments.length) * 100
         )
       : 0;
 
-  fleetAvailabilityRate =
-    this.trucks.length > 0
+  }
+
+
+
+  get fleetAvailabilityRate(): number {
+
+    return this.trucks.length > 0
       ? Math.round(
           (this.availableTrucks /
-            this.trucks.length) *
-            100
+            this.trucks.length) * 100
         )
       : 0;
 
-  metrics: DashboardMetric[] = [
+  }
+
+
+
+
+  get deliveredShipmentsValue(): number {
+
+    return this.deliveredShipments;
+
+  }
+
+
+get metrics(): DashboardMetric[] {
+  return [
     {
       title: 'Total des camions',
       value: this.trucks.length,
@@ -184,6 +374,7 @@ export class Dashboard {
       cssClass: 'trucks-card',
       route: '/trucks',
     },
+
     {
       title: 'Chauffeurs disponibles',
       value: this.availableDrivers,
@@ -192,6 +383,7 @@ export class Dashboard {
       cssClass: 'drivers-card',
       route: '/drivers',
     },
+
     {
       title: 'Expéditions en transit',
       value: this.shipmentsInTransit,
@@ -200,6 +392,7 @@ export class Dashboard {
       cssClass: 'shipments-card',
       route: '/shipments',
     },
+
     {
       title: 'Expéditions retardées',
       value: this.delayedShipments,
@@ -211,6 +404,7 @@ export class Dashboard {
       cssClass: 'delayed-card',
       route: '/tracking',
     },
+
     {
       title: 'Maintenances en cours',
       value: this.ongoingMaintenance,
@@ -219,6 +413,7 @@ export class Dashboard {
       cssClass: 'maintenance-card',
       route: '/maintenance',
     },
+
     {
       title: 'Notifications non lues',
       value: this.unreadNotifications,
@@ -228,6 +423,9 @@ export class Dashboard {
       route: '/notifications',
     },
   ];
+}
+  
+
 
   shipmentDisplayedColumns: string[] = [
     'reference',
@@ -237,18 +435,34 @@ export class Dashboard {
     'status',
   ];
 
-  recentShipments: RecentShipment[] =
-    this.shipments
+
+
+  get recentShipments(): RecentShipment[] {
+
+    return this.shipments
       .slice(-4)
       .reverse()
       .map(shipment => ({
+
         reference: shipment.reference,
+
         customer: shipment.customer,
+
         origin: shipment.origin,
+
         destination: shipment.destination,
+
         driver: shipment.driver,
+
         status: shipment.status,
+
       }));
+
+  }
+
+
+
+
 
   maintenanceDisplayedColumns: string[] = [
     'truck',
@@ -258,8 +472,12 @@ export class Dashboard {
     'status',
   ];
 
-  maintenanceAlerts: MaintenanceAlert[] =
-    this.maintenanceRecords
+
+
+
+  get maintenanceAlerts(): MaintenanceAlert[] {
+
+    return this.maintenanceRecords
       .filter(
         maintenance =>
           maintenance.status !== 'Terminée' &&
@@ -268,35 +486,58 @@ export class Dashboard {
       .slice(-3)
       .reverse()
       .map(maintenance => ({
+
         truck: maintenance.truck,
+
         maintenanceType:
           maintenance.maintenanceType,
+
         scheduledDate:
           maintenance.scheduledDate,
-        workshop: maintenance.workshop,
-        status: maintenance.status,
+
+        workshop:
+          maintenance.workshop,
+
+        status:
+          maintenance.status,
+
       }));
 
+  }
+
+
+
+
   quickActions = [
+
     {
       label: 'Ajouter un camion',
       icon: 'local_shipping',
       route: '/trucks',
     },
+
+
     {
       label: 'Créer une expédition',
       icon: 'add_road',
       route: '/shipments',
     },
+
+
     {
       label: 'Consulter le suivi',
       icon: 'location_on',
       route: '/tracking',
     },
+
+
     {
       label: 'Voir les rapports',
       icon: 'bar_chart',
       route: '/reports',
     },
+
   ];
+
+
 }

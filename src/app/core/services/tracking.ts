@@ -1,25 +1,42 @@
 import { Injectable } from '@angular/core';
 
+
 export interface TrackingRecord {
+
   id: number;
+
   shipmentReference: string;
+
   truck: string;
+
   driver: string;
+
   origin: string;
+
   destination: string;
+
   currentLocation: string;
+
   progress: number;
-  lastUpdate: string;
+
   status:
     | 'En attente'
     | 'En route'
-    | 'Livrée'
-    | 'Retardée';
+    | 'Retardée'
+    | 'Livrée';
+
+  lastUpdate: string;
+
 }
+
+
 
 const STORAGE_KEY = 'tms_tracking';
 
-const DEFAULT_TRACKING_RECORDS: TrackingRecord[] = [
+
+
+const DEFAULT_TRACKING: TrackingRecord[] = [
+
   {
     id: 1,
     shipmentReference: 'EXP-2026-001',
@@ -29,9 +46,11 @@ const DEFAULT_TRACKING_RECORDS: TrackingRecord[] = [
     destination: 'Rabat',
     currentLocation: 'Rabat',
     progress: 100,
-    lastUpdate: '2026-07-26T14:30',
     status: 'Livrée',
+    lastUpdate: '2026-07-26'
   },
+
+
   {
     id: 2,
     shipmentReference: 'EXP-2026-002',
@@ -39,11 +58,13 @@ const DEFAULT_TRACKING_RECORDS: TrackingRecord[] = [
     driver: 'Hamza Benali',
     origin: 'Casablanca',
     destination: 'Marrakech',
-    currentLocation: 'Settat',
-    progress: 45,
-    lastUpdate: '2026-07-28T13:15',
+    currentLocation: 'Benguerir',
+    progress: 60,
     status: 'En route',
+    lastUpdate: '2026-07-28'
   },
+
+
   {
     id: 3,
     shipmentReference: 'EXP-2026-003',
@@ -51,154 +72,231 @@ const DEFAULT_TRACKING_RECORDS: TrackingRecord[] = [
     driver: 'Omar Alaoui',
     origin: 'Tanger',
     destination: 'Fès',
-    currentLocation: 'Entrepôt Tanger',
-    progress: 10,
-    lastUpdate: '2026-07-28T09:00',
-    status: 'En attente',
-  },
+    currentLocation: 'Casablanca',
+    progress: 30,
+    status: 'Retardée',
+    lastUpdate: '2026-07-30'
+  }
+
 ];
 
+
+
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class TrackingService {
+
+
   private trackingRecords: TrackingRecord[] =
-    this.loadTrackingRecords();
+    this.loadTracking();
+
+
 
   getAll(): TrackingRecord[] {
-    return this.trackingRecords.map(record => ({
-      ...record,
-    }));
+
+    return this.trackingRecords.map(
+      record => ({
+        ...record
+      })
+    );
+
   }
+
+
 
   add(
-    trackingData: Omit<TrackingRecord, 'id'>
+    data: Omit<TrackingRecord,'id'>
   ): TrackingRecord {
-    const newTracking: TrackingRecord = {
+
+
+    const record: TrackingRecord = {
+
       id: this.getNextId(),
-      ...trackingData,
+
+      ...data
+
     };
 
-    this.trackingRecords = [
-      ...this.trackingRecords,
-      newTracking,
-    ];
 
-    this.saveTrackingRecords();
+    this.trackingRecords.push(record);
+
+    this.saveTracking();
+
 
     return {
-      ...newTracking,
+      ...record
     };
+
   }
 
+
+
+
   update(
-    trackingId: number,
-    trackingData: Omit<TrackingRecord, 'id'>
+    id:number,
+    data: Omit<TrackingRecord,'id'>
   ): TrackingRecord | undefined {
-    const trackingExists =
-      this.trackingRecords.some(
-        record => record.id === trackingId
-      );
 
-    if (!trackingExists) {
-      return undefined;
-    }
 
-    const updatedTracking: TrackingRecord = {
-      id: trackingId,
-      ...trackingData,
+    const updated: TrackingRecord = {
+
+      id,
+
+      ...data
+
     };
+
 
     this.trackingRecords =
       this.trackingRecords.map(record =>
-        record.id === trackingId
-          ? updatedTracking
+
+        record.id === id
+          ? updated
           : record
+
       );
 
-    this.saveTrackingRecords();
+
+    this.saveTracking();
+
 
     return {
-      ...updatedTracking,
+      ...updated
     };
+
   }
 
-  delete(trackingId: number): void {
+
+
+
+  delete(id:number): void {
+
+
     this.trackingRecords =
       this.trackingRecords.filter(
-        record => record.id !== trackingId
+        record => record.id !== id
       );
 
-    this.saveTrackingRecords();
+
+    this.saveTracking();
+
   }
+
+
+
 
   shipmentReferenceExists(
-    shipmentReference: string,
-    excludedTrackingId: number | null = null
+    reference:string,
+    excludedId:number|null = null
   ): boolean {
-    const normalizedReference =
-      shipmentReference.trim().toLowerCase();
 
-    return this.trackingRecords.some(
-      record =>
-        record.id !== excludedTrackingId &&
-        record.shipmentReference
-          .trim()
-          .toLowerCase() === normalizedReference
+
+    return this.trackingRecords.some(record =>
+
+      record.id !== excludedId &&
+
+      record.shipmentReference
+        .toLowerCase()
+        ===
+      reference.toLowerCase()
+
     );
+
   }
 
-  private getNextId(): number {
-    const ids = this.trackingRecords.map(
-      record => record.id
-    );
 
-    return ids.length > 0
-      ? Math.max(...ids) + 1
+
+
+  private getNextId():number {
+
+    return this.trackingRecords.length > 0
+
+      ? Math.max(
+          ...this.trackingRecords.map(
+            r => r.id
+          )
+        ) + 1
+
       : 1;
+
   }
 
-  private loadTrackingRecords(): TrackingRecord[] {
-    const savedTracking =
+
+
+
+  private loadTracking():TrackingRecord[] {
+
+
+    const saved =
       localStorage.getItem(STORAGE_KEY);
 
-    if (!savedTracking) {
-      this.saveDefaultTrackingRecords();
 
-      return DEFAULT_TRACKING_RECORDS.map(record => ({
-        ...record,
-      }));
+
+    if(!saved){
+
+      this.saveDefault();
+
+      return [
+        ...DEFAULT_TRACKING
+      ];
+
     }
+
+
 
     try {
-      const parsedTracking =
-        JSON.parse(savedTracking) as TrackingRecord[];
 
-      if (!Array.isArray(parsedTracking)) {
-        throw new Error('Format invalide');
-      }
+      return JSON.parse(saved);
 
-      return parsedTracking;
     } catch {
-      this.saveDefaultTrackingRecords();
 
-      return DEFAULT_TRACKING_RECORDS.map(record => ({
-        ...record,
-      }));
+      this.saveDefault();
+
+      return [
+        ...DEFAULT_TRACKING
+      ];
+
     }
+
   }
 
-  private saveTrackingRecords(): void {
+
+
+
+  private saveTracking():void {
+
+
     localStorage.setItem(
+
       STORAGE_KEY,
-      JSON.stringify(this.trackingRecords)
+
+      JSON.stringify(
+        this.trackingRecords
+      )
+
     );
+
   }
 
-  private saveDefaultTrackingRecords(): void {
+
+
+
+
+  private saveDefault():void {
+
+
     localStorage.setItem(
+
       STORAGE_KEY,
-      JSON.stringify(DEFAULT_TRACKING_RECORDS)
+
+      JSON.stringify(
+        DEFAULT_TRACKING
+      )
+
     );
+
   }
+
+
 }

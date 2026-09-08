@@ -1,25 +1,48 @@
-
 <div class="warehouses-page">
+
+  <!-- ========================= -->
+  <!-- PAGE HEADER -->
+  <!-- ========================= -->
+
   <div class="page-header">
+
     <div>
       <h1>Gestion des entrepôts</h1>
-      <p>Consulter et gérer les entrepôts de l’entreprise.</p>
+
+      <p>
+        Consulter et gérer les entrepôts de l’entreprise.
+      </p>
     </div>
 
-    <button mat-flat-button color="primary" (click)="toggleForm()">
-      <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="toggleForm()"
+    >
+      <mat-icon>
+        {{ showForm ? 'close' : 'add' }}
+      </mat-icon>
 
       {{ showForm ? 'Fermer' : 'Ajouter un entrepôt' }}
     </button>
+
   </div>
 
+
+  <!-- ========================= -->
+  <!-- ADD / EDIT FORM -->
+  <!-- ========================= -->
+
   @if (showForm) {
+
     <form
       class="warehouse-form-card"
       [formGroup]="warehouseForm"
       (ngSubmit)="saveWarehouse()"
     >
+
       <div class="form-header">
+
         <h2>
           {{
             editingWarehouseId !== null
@@ -35,11 +58,23 @@
               : 'Renseignez les informations du nouvel entrepôt.'
           }}
         </p>
+
       </div>
 
+
+      <!-- ========================= -->
+      <!-- FORM GRID -->
+      <!-- ========================= -->
+
       <div class="form-grid">
+
+        <!-- NAME -->
+
         <mat-form-field appearance="outline">
-          <mat-label>Nom de l’entrepôt</mat-label>
+
+          <mat-label>
+            Nom de l’entrepôt
+          </mat-label>
 
           <input
             matInput
@@ -51,14 +86,23 @@
             warehouseForm.controls.name.touched &&
             warehouseForm.controls.name.hasError('required')
           ) {
+
             <mat-error>
               Le nom de l’entrepôt est obligatoire.
             </mat-error>
+
           }
+
         </mat-form-field>
 
+
+        <!-- CITY -->
+
         <mat-form-field appearance="outline">
-          <mat-label>Ville</mat-label>
+
+          <mat-label>
+            Ville
+          </mat-label>
 
           <input
             matInput
@@ -70,14 +114,23 @@
             warehouseForm.controls.city.touched &&
             warehouseForm.controls.city.hasError('required')
           ) {
+
             <mat-error>
               La ville est obligatoire.
             </mat-error>
+
           }
+
         </mat-form-field>
 
+
+        <!-- ADDRESS -->
+
         <mat-form-field appearance="outline">
-          <mat-label>Adresse</mat-label>
+
+          <mat-label>
+            Adresse
+          </mat-label>
 
           <input
             matInput
@@ -89,14 +142,23 @@
             warehouseForm.controls.address.touched &&
             warehouseForm.controls.address.hasError('required')
           ) {
+
             <mat-error>
               L’adresse est obligatoire.
             </mat-error>
+
           }
+
         </mat-form-field>
 
+
+        <!-- CAPACITY -->
+
         <mat-form-field appearance="outline">
-          <mat-label>Capacité</mat-label>
+
+          <mat-label>
+            Capacité
+          </mat-label>
 
           <input
             matInput
@@ -110,81 +172,66 @@
             warehouseForm.controls.capacity.touched &&
             warehouseForm.controls.capacity.hasError('required')
           ) {
+
             <mat-error>
               La capacité est obligatoire.
             </mat-error>
+
           }
 
           @if (
             warehouseForm.controls.capacity.touched &&
             warehouseForm.controls.capacity.hasError('min')
           ) {
+
             <mat-error>
               La capacité doit être supérieure à zéro.
             </mat-error>
+
           }
+
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Nom du responsable</mat-label>
 
-          <input
-            matInput
-            formControlName="managerName"
-            placeholder="Exemple : Karim Alaoui"
-          />
-
-          @if (
-            warehouseForm.controls.managerName.touched &&
-            warehouseForm.controls.managerName.hasError('required')
-          ) {
-            <mat-error>
-              Le nom du responsable est obligatoire.
-            </mat-error>
-          }
-        </mat-form-field>
+        <!-- STATUS -->
 
         <mat-form-field appearance="outline">
-          <mat-label>Téléphone</mat-label>
 
-          <input
-            matInput
-            formControlName="phone"
-            placeholder="Exemple : 0611223344"
-          />
-
-          @if (
-            warehouseForm.controls.phone.touched &&
-            warehouseForm.controls.phone.hasError('required')
-          ) {
-            <mat-error>
-              Le numéro de téléphone est obligatoire.
-            </mat-error>
-          }
-
-          @if (
-            warehouseForm.controls.phone.touched &&
-            warehouseForm.controls.phone.hasError('pattern')
-          ) {
-            <mat-error>
-              Le numéro doit contenir exactement 10 chiffres.
-            </mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Statut</mat-label>
+          <mat-label>
+            Statut
+          </mat-label>
 
           <mat-select formControlName="status">
-            <mat-option value="Actif">Actif</mat-option>
-            <mat-option value="Complet">Complet</mat-option>
-            <mat-option value="Maintenance">Maintenance</mat-option>
-            <mat-option value="Inactif">Inactif</mat-option>
+
+            <mat-option value="Actif">
+              Actif
+            </mat-option>
+
+            <mat-option value="Complet">
+              Complet
+            </mat-option>
+
+            <mat-option value="Maintenance">
+              Maintenance
+            </mat-option>
+
+            <mat-option value="Inactif">
+              Inactif
+            </mat-option>
+
           </mat-select>
+
         </mat-form-field>
+
       </div>
 
+
+      <!-- ========================= -->
+      <!-- FORM ACTIONS -->
+      <!-- ========================= -->
+
       <div class="form-actions">
+
         <button
           mat-button
           type="button"
@@ -193,164 +240,277 @@
           Annuler
         </button>
 
+
         <button
           mat-flat-button
           color="primary"
           type="submit"
         >
-          <mat-icon>save</mat-icon>
+
+          <mat-icon>
+            save
+          </mat-icon>
 
           {{
             editingWarehouseId !== null
               ? 'Enregistrer les modifications'
               : 'Enregistrer'
           }}
+
         </button>
+
       </div>
+
     </form>
+
   }
 
+
+  <!-- ========================= -->
+  <!-- DETAILS -->
+  <!-- ========================= -->
+
   @if (selectedWarehouse) {
+
     <div class="warehouse-details-card">
+
       <div class="details-header">
+
         <div>
-          <h2>Détails de l’entrepôt</h2>
-          <p>{{ selectedWarehouse.name }}</p>
+
+          <h2>
+            Détails de l’entrepôt
+          </h2>
+
+          <p>
+            {{ selectedWarehouse.name }}
+          </p>
+
         </div>
+
 
         <button
           mat-icon-button
           matTooltip="Fermer"
           (click)="closeWarehouseDetails()"
         >
-          <mat-icon>close</mat-icon>
+
+          <mat-icon>
+            close
+          </mat-icon>
+
         </button>
+
       </div>
 
+
       <div class="details-grid">
-        <div class="detail-item">
-          <span>Nom</span>
-          <strong>{{ selectedWarehouse.name }}</strong>
-        </div>
 
         <div class="detail-item">
-          <span>Ville</span>
-          <strong>{{ selectedWarehouse.city }}</strong>
+
+          <span>
+            Nom
+          </span>
+
+          <strong>
+            {{ selectedWarehouse.name }}
+          </strong>
+
         </div>
 
-        <div class="detail-item">
-          <span>Adresse</span>
-          <strong>{{ selectedWarehouse.address }}</strong>
-        </div>
 
         <div class="detail-item">
-          <span>Capacité</span>
-          <strong>{{ selectedWarehouse.capacity }}</strong>
+
+          <span>
+            Ville
+          </span>
+
+          <strong>
+            {{ selectedWarehouse.city }}
+          </strong>
+
         </div>
 
-        <div class="detail-item">
-          <span>Responsable</span>
-          <strong>{{ selectedWarehouse.managerName }}</strong>
-        </div>
 
         <div class="detail-item">
-          <span>Téléphone</span>
-          <strong>{{ selectedWarehouse.phone }}</strong>
+
+          <span>
+            Adresse
+          </span>
+
+          <strong>
+            {{ selectedWarehouse.address }}
+          </strong>
+
         </div>
 
+
         <div class="detail-item">
-          <span>Statut</span>
+
+          <span>
+            Capacité
+          </span>
+
+          <strong>
+            {{ selectedWarehouse.capacity }}
+          </strong>
+
+        </div>
+
+
+        <div class="detail-item">
+
+          <span>
+            Statut
+          </span>
 
           <strong
             class="status-badge"
             [class.status-active]="selectedWarehouse.status === 'Actif'"
             [class.status-full]="selectedWarehouse.status === 'Complet'"
-            [class.status-maintenance]="
-              selectedWarehouse.status === 'Maintenance'
-            "
+            [class.status-maintenance]="selectedWarehouse.status === 'Maintenance'"
             [class.status-inactive]="selectedWarehouse.status === 'Inactif'"
           >
+
             {{ selectedWarehouse.status }}
+
           </strong>
+
         </div>
+
       </div>
+
     </div>
+
   }
 
-  <mat-form-field appearance="outline" class="search-field">
-    <mat-label>Rechercher un entrepôt</mat-label>
+
+  <!-- ========================= -->
+  <!-- SEARCH -->
+  <!-- ========================= -->
+
+  <mat-form-field
+    appearance="outline"
+    class="search-field"
+  >
+
+    <mat-label>
+      Rechercher un entrepôt
+    </mat-label>
 
     <input
       matInput
-      placeholder="Nom, ville, responsable, statut..."
+      placeholder="Nom, ville, statut..."
       (keyup)="applyFilter($event)"
     />
 
-    <mat-icon matSuffix>search</mat-icon>
+    <mat-icon matSuffix>
+      search
+    </mat-icon>
+
   </mat-form-field>
 
+
+  <!-- ========================= -->
+  <!-- TABLE -->
+  <!-- ========================= -->
+
   <div class="table-container">
+
     <table
       mat-table
       [dataSource]="dataSource"
       class="warehouses-table"
     >
+
+
+      <!-- ========================= -->
+      <!-- NAME -->
+      <!-- ========================= -->
+
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>
+
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+        >
           Entrepôt
         </th>
 
-        <td mat-cell *matCellDef="let warehouse">
+        <td
+          mat-cell
+          *matCellDef="let warehouse"
+        >
           {{ warehouse.name }}
         </td>
+
       </ng-container>
 
+
+      <!-- ========================= -->
+      <!-- CITY -->
+      <!-- ========================= -->
+
       <ng-container matColumnDef="city">
-        <th mat-header-cell *matHeaderCellDef>
+
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+        >
           Ville
         </th>
 
-        <td mat-cell *matCellDef="let warehouse">
+        <td
+          mat-cell
+          *matCellDef="let warehouse"
+        >
           {{ warehouse.city }}
         </td>
+
       </ng-container>
 
+
+      <!-- ========================= -->
+      <!-- CAPACITY -->
+      <!-- ========================= -->
+
       <ng-container matColumnDef="capacity">
-        <th mat-header-cell *matHeaderCellDef>
+
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+        >
           Capacité
         </th>
 
-        <td mat-cell *matCellDef="let warehouse">
+        <td
+          mat-cell
+          *matCellDef="let warehouse"
+        >
           {{ warehouse.capacity }}
         </td>
+
       </ng-container>
 
-      <ng-container matColumnDef="managerName">
-        <th mat-header-cell *matHeaderCellDef>
-          Responsable
-        </th>
 
-        <td mat-cell *matCellDef="let warehouse">
-          {{ warehouse.managerName }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="phone">
-        <th mat-header-cell *matHeaderCellDef>
-          Téléphone
-        </th>
-
-        <td mat-cell *matCellDef="let warehouse">
-          {{ warehouse.phone }}
-        </td>
-      </ng-container>
+      <!-- ========================= -->
+      <!-- STATUS -->
+      <!-- ========================= -->
 
       <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>
+
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+        >
           Statut
         </th>
 
-        <td mat-cell *matCellDef="let warehouse">
+        <td
+          mat-cell
+          *matCellDef="let warehouse"
+        >
+
           <span
             class="status-badge"
             [class.status-active]="warehouse.status === 'Actif'"
@@ -358,61 +518,130 @@
             [class.status-maintenance]="warehouse.status === 'Maintenance'"
             [class.status-inactive]="warehouse.status === 'Inactif'"
           >
+
             {{ warehouse.status }}
+
           </span>
+
         </td>
+
       </ng-container>
 
+
+      <!-- ========================= -->
+      <!-- ACTIONS -->
+      <!-- ========================= -->
+
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>
+
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+        >
           Actions
         </th>
 
-        <td mat-cell *matCellDef="let warehouse" class="actions-cell">
+        <td
+          mat-cell
+          *matCellDef="let warehouse"
+          class="actions-cell"
+        >
+
+          <!-- VIEW -->
+
           <button
             mat-icon-button
             matTooltip="Consulter"
             (click)="viewWarehouse(warehouse)"
           >
-            <mat-icon>visibility</mat-icon>
+
+            <mat-icon>
+              visibility
+            </mat-icon>
+
           </button>
+
+
+          <!-- EDIT -->
 
           <button
             mat-icon-button
             matTooltip="Modifier"
             (click)="editWarehouse(warehouse)"
           >
-            <mat-icon>edit</mat-icon>
+
+            <mat-icon>
+              edit
+            </mat-icon>
+
           </button>
+
+
+          <!-- DELETE -->
 
           <button
             mat-icon-button
             matTooltip="Supprimer"
             (click)="deleteWarehouse(warehouse)"
           >
-            <mat-icon>delete</mat-icon>
+
+            <mat-icon>
+              delete
+            </mat-icon>
+
           </button>
+
         </td>
+
       </ng-container>
+
+
+      <!-- ========================= -->
+      <!-- HEADER ROW -->
+      <!-- ========================= -->
 
       <tr
         mat-header-row
         *matHeaderRowDef="displayedColumns"
       ></tr>
 
+
+      <!-- ========================= -->
+      <!-- DATA ROW -->
+      <!-- ========================= -->
+
       <tr
         mat-row
-        *matRowDef="let row; columns: displayedColumns"
+        *matRowDef="
+          let row;
+          columns: displayedColumns
+        "
       ></tr>
 
-      <tr class="mat-row" *matNoDataRow>
+
+      <!-- ========================= -->
+      <!-- NO DATA -->
+      <!-- ========================= -->
+
+      <tr
+        class="mat-row"
+        *matNoDataRow
+      >
+
         <td
           class="mat-cell no-data"
           [attr.colspan]="displayedColumns.length"
         >
+
           Aucun entrepôt trouvé.
+
         </td>
+
       </tr>
+
+
     </table>
+
   </div>
+
 </div>
