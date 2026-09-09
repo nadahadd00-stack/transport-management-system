@@ -55,6 +55,66 @@ const DEFAULT_MAINTENANCE_RECORDS: MaintenanceRecord[] = [
     workshop: 'Pneu Express Tanger',
     status: 'Terminée',
   },
+  {
+    id: 4,
+    truck: '44556-D-9',
+    maintenanceType: 'Contrôle général',
+    description:
+      'Inspection complète du camion.',
+    scheduledDate: '2026-08-10',
+    mileage: 90000,
+    cost: 1800,
+    workshop: 'Garage Central',
+    status: 'Planifiée',
+  },
+  {
+    id: 5,
+    truck: '77889-A-5',
+    maintenanceType: 'Vidange',
+    description:
+      'Changement huile moteur.',
+    scheduledDate: '2026-08-12',
+    mileage: 105000,
+    cost: 1300,
+    workshop: 'Garage Atlas',
+    status: 'Planifiée',
+  },
+  {
+    id: 6,
+    truck: '88990-B-6',
+    maintenanceType: 'Freinage',
+    description:
+      'Remplacement système de freinage.',
+    scheduledDate: '2026-08-14',
+    mileage: 118000,
+    cost: 3200,
+    workshop: 'Auto Service Casablanca',
+    status: 'En cours',
+  },
+  {
+    id: 7,
+    truck: '99001-C-7',
+    maintenanceType: 'Pneumatiques',
+    description:
+      'Changement pneus arrière.',
+    scheduledDate: '2026-08-16',
+    mileage: 110000,
+    cost: 4500,
+    workshop: 'Pneu Express Tanger',
+    status: 'Planifiée',
+  },
+  {
+    id: 8,
+    truck: '11002-D-8',
+    maintenanceType: 'Révision',
+    description:
+      'Révision périodique du camion.',
+    scheduledDate: '2026-08-18',
+    mileage: 95000,
+    cost: 2200,
+    workshop: 'Garage Central',
+    status: 'Planifiée',
+  },
 ];
 
 @Injectable({

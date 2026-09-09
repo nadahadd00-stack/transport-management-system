@@ -10,6 +10,7 @@ export interface Driver {
   licenseNumber: string;
   licenseCategory: string;
   experienceYears: number;
+
   status:
     | 'Disponible'
     | 'En mission'
@@ -30,11 +31,12 @@ interface BackendChauffeur {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DriversService {
 
-  private readonly http = inject(HttpClient);
+  private readonly http =
+    inject(HttpClient);
 
   private readonly apiUrl =
     'http://localhost:8081/chauffeurs';
@@ -45,10 +47,8 @@ export class DriversService {
     return this.http
       .get<BackendChauffeur[]>(this.apiUrl)
       .pipe(
-
         map(chauffeurs =>
           chauffeurs.map(c => ({
-
             id: c.id,
 
             fullName:
@@ -69,13 +69,10 @@ export class DriversService {
               0,
 
             status:
-              this.convertStatus(c.status)
-
+              this.convertStatus(c.status),
           }))
         )
-
       );
-
   }
 
 
@@ -95,9 +92,7 @@ export class DriversService {
       names.join(' ');
 
     const body = {
-
       firstName,
-
       lastName,
 
       phone:
@@ -120,15 +115,13 @@ export class DriversService {
       status:
         this.convertStatusToBackend(
           driver.status
-        )
-
+        ),
     };
 
     return this.http.post(
       this.apiUrl,
       body
     );
-
   }
 
 
@@ -149,9 +142,7 @@ export class DriversService {
       names.join(' ');
 
     const body = {
-
       firstName,
-
       lastName,
 
       phone:
@@ -174,15 +165,13 @@ export class DriversService {
       status:
         this.convertStatusToBackend(
           driver.status
-        )
-
+        ),
     };
 
     return this.http.put(
       `${this.apiUrl}/${id}`,
       body
     );
-
   }
 
 
@@ -193,7 +182,6 @@ export class DriversService {
     return this.http.delete(
       `${this.apiUrl}/${id}`
     );
-
   }
 
 
@@ -203,7 +191,6 @@ export class DriversService {
   ): boolean {
 
     return false;
-
   }
 
 
@@ -213,7 +200,6 @@ export class DriversService {
   ): boolean {
 
     return false;
-
   }
 
 
@@ -271,19 +257,8 @@ export class DriversService {
         return 'Indisponible';
 
       default:
-
-        if (
-          status === 'Disponible' ||
-          status === 'En mission' ||
-          status === 'En congé' ||
-          status === 'Indisponible'
-        ) {
-          return status;
-        }
-
         return 'Indisponible';
     }
-
   }
 
 
@@ -307,9 +282,6 @@ export class DriversService {
 
       default:
         return 'INDISPONIBLE';
-
     }
-
   }
-
 }

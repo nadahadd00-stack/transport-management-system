@@ -20,9 +20,9 @@ export interface Truck {
   fuelType: string;
 
   status:
-    | 'Disponible'
-    | 'Affecté'
-    | 'Maintenance'
+    | 'DISPONIBLE'
+    |  'AFFECTE'
+    | 'MAINTENANCE'
     | 'Hors service';
 
 }

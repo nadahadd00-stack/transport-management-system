@@ -28,10 +28,10 @@ export interface Shipment {
   expectedArrival: string;
 
   status:
-  | 'En préparation'
-  | 'En transit'
-  | 'Livrée'
-  | 'Annulée';
+  | 'PLANNED'
+  | 'IN_PROGRESS'
+  | 'DELIVERED'
+  | 'CANCELLED';
 
 }
 

@@ -233,41 +233,44 @@ private loadNotifications(): void {
 
   get availableTrucks(): number {
 
-    return this.trucks.filter(
-      truck => truck.status === 'Disponible'
-    ).length;
+  return this.trucks.filter(
+    truck => truck.status === 'DISPONIBLE'
+  ).length;
 
-  }
+}
 
 
 
   get availableDrivers(): number {
 
-    return this.drivers.filter(
-      driver => driver.status === 'Disponible'
-    ).length;
+  return this.drivers.filter(
+    driver =>
+      driver.status === 'Disponible'
+  ).length;
 
-  }
-
-
-
-  get driversOnMission(): number {
-
-    return this.drivers.filter(
-      driver => driver.status === 'En mission'
-    ).length;
-
-  }
+}
 
 
 
-  get shipmentsInTransit(): number {
+ get driversOnMission(): number {
 
-    return this.shipments.filter(
-      shipment => shipment.status === 'En transit'
-    ).length;
+  return this.drivers.filter(
+    driver =>
+      driver.status === 'En mission'
+  ).length;
 
-  }
+}
+
+
+
+ get shipmentsInTransit(): number {
+
+  return this.shipments.filter(
+    shipment =>
+      shipment.status === 'IN_PROGRESS'
+  ).length;
+
+}
 
 
 
@@ -283,11 +286,13 @@ private loadNotifications(): void {
 
   get deliveredShipments(): number {
 
-    return this.shipments.filter(
-      shipment => shipment.status === 'Livrée'
-    ).length;
+  return this.shipments.filter(
+    shipment =>
+      shipment.status === 'DELIVERED'
+  ).length;
 
-  }
+}
+
 
 
 
@@ -439,26 +444,26 @@ get metrics(): DashboardMetric[] {
 
   get recentShipments(): RecentShipment[] {
 
-    return this.shipments
-      .slice(-4)
-      .reverse()
-      .map(shipment => ({
+  return this.shipments
+    .slice(-4)
+    .reverse()
+    .map(shipment => ({
 
-        reference: shipment.reference,
+      reference: shipment.reference,
 
-        customer: shipment.customer,
+      customer: `Client #${shipment.customerId}`,
 
-        origin: shipment.origin,
+      origin: `Entrepôt #${shipment.warehouseId}`,
 
-        destination: shipment.destination,
+      destination: shipment.destinationCity,
 
-        driver: shipment.driver,
+      driver: `Chauffeur #${shipment.driverId}`,
 
-        status: shipment.status,
+      status: shipment.status,
 
-      }));
+    }));
 
-  }
+}
 
 
 
