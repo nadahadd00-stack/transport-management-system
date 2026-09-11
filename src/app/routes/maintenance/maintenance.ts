@@ -1,32 +1,41 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+
 import {
   MatTableDataSource,
   MatTableModule,
 } from '@angular/material/table';
+
 import { MatTooltipModule } from '@angular/material/tooltip';
+
 
 import {
   MaintenanceRecord,
   MaintenanceService,
 } from '../../core/services/maintenance';
 
+
 import {
   Truck,
   TrucksService,
 } from '../../core/services/trucks';
 
+
+
 @Component({
   selector: 'app-maintenance',
+
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
@@ -37,29 +46,45 @@ import {
     MatTableModule,
     MatTooltipModule,
   ],
+
   templateUrl: './maintenance.html',
   styleUrl: './maintenance.scss',
 })
-export class Maintenance {
+
+
+export class Maintenance implements OnInit {
+
+
   private readonly formBuilder =
     inject(FormBuilder);
+
 
   private readonly maintenanceService =
     inject(MaintenanceService);
 
+
   private readonly trucksService =
     inject(TrucksService);
 
+
+
   trucks: Truck[] = [];
+
 
   showForm = false;
 
-  selectedMaintenance: MaintenanceRecord | null =
-    null;
 
-  editingMaintenanceId: number | null = null;
+  selectedMaintenance:
+    MaintenanceRecord | null = null;
+
+
+  editingMaintenanceId:
+    number | null = null;
+
+
 
   displayedColumns: string[] = [
+
     'truck',
     'maintenanceType',
     'scheduledDate',
@@ -67,264 +92,569 @@ export class Maintenance {
     'cost',
     'workshop',
     'status',
-    'actions',
+    'actions'
+
   ];
 
+
+
   dataSource =
-    new MatTableDataSource<MaintenanceRecord>(
-      this.maintenanceService.getAll()
-    );
+    new MatTableDataSource<MaintenanceRecord>([]);
+
+
+
 
   maintenanceForm =
     this.formBuilder.nonNullable.group({
-      truck: ['', Validators.required],
+
+
+      truck: [
+        '',
+        Validators.required
+      ],
+
 
       maintenanceType: [
         '',
-        Validators.required,
+        Validators.required
       ],
+
 
       description: [
         '',
         [
           Validators.required,
-          Validators.minLength(5),
-        ],
+          Validators.minLength(5)
+        ]
       ],
+
 
       scheduledDate: [
         '',
-        Validators.required,
+        Validators.required
       ],
+
 
       mileage: [
         0,
         [
           Validators.required,
-          Validators.min(0),
-        ],
+          Validators.min(0)
+        ]
       ],
+
 
       cost: [
         0,
         [
           Validators.required,
-          Validators.min(0),
-        ],
+          Validators.min(0)
+        ]
       ],
+
 
       workshop: [
         '',
-        Validators.required,
+        Validators.required
       ],
+
 
       status: [
         'Planifiée',
-        Validators.required,
-      ],
+        Validators.required
+      ]
+
     });
 
+
+
+
+
+  ngOnInit(): void {
+
+    this.refreshMaintenanceRecords();
+
+  }
+
+
+
+
+
   toggleForm(): void {
-    if (this.showForm) {
+
+    if(this.showForm){
+
       this.closeForm();
-      return;
+
+    }
+    else{
+
+      this.openAddForm();
+
     }
 
-    this.openAddForm();
   }
+
+
+
+
 
   openAddForm(): void {
+
+
     this.refreshTrucks();
 
+
     this.editingMaintenanceId = null;
+
     this.selectedMaintenance = null;
+
+
     this.resetForm();
+
+
     this.showForm = true;
+
   }
+
+
+
+
 
   closeForm(): void {
+
     this.showForm = false;
+
     this.editingMaintenanceId = null;
+
     this.resetForm();
+
   }
 
+
+
+
+
   saveMaintenance(): void {
-    if (this.maintenanceForm.invalid) {
+
+
+    if(this.maintenanceForm.invalid){
+
       this.maintenanceForm.markAllAsTouched();
+
       return;
+
     }
+
+
 
     const formValue =
       this.maintenanceForm.getRawValue();
 
-    const truck = formValue.truck.trim();
 
-    const maintenanceType =
-      formValue.maintenanceType.trim();
 
-    const maintenanceAlreadyExists =
-      this.maintenanceService.maintenanceExists(
-        truck,
-        maintenanceType,
-        formValue.scheduledDate,
-        this.editingMaintenanceId
-      );
+    const maintenanceData:
+      Omit<MaintenanceRecord,'id'> = {
 
-    if (maintenanceAlreadyExists) {
-      alert(
-        'Une maintenance identique est déjà enregistrée pour ce camion à cette date.'
-      );
-      return;
-    }
 
-    const maintenanceData: Omit<
-      MaintenanceRecord,
-      'id'
-    > = {
-      truck,
-      maintenanceType,
+      truck:
+        formValue.truck.trim(),
+
+
+      maintenanceType:
+        formValue.maintenanceType.trim(),
+
+
       description:
         formValue.description.trim(),
+
+
       scheduledDate:
         formValue.scheduledDate,
-      mileage: formValue.mileage,
-      cost: formValue.cost,
+
+
+      mileage:
+        formValue.mileage,
+
+
+      cost:
+        formValue.cost,
+
+
       workshop:
         formValue.workshop.trim(),
+
+
       status:
-        formValue.status as MaintenanceRecord['status'],
+        formValue.status as MaintenanceRecord['status']
+
     };
 
-    if (
-      this.editingMaintenanceId !== null
-    ) {
-      this.maintenanceService.update(
-        this.editingMaintenanceId,
-        maintenanceData
-      );
-    } else {
-      this.maintenanceService.add(
-        maintenanceData
-      );
+
+
+
+
+    if(this.editingMaintenanceId !== null){
+
+
+      this.maintenanceService
+        .update(
+          this.editingMaintenanceId,
+          maintenanceData
+        )
+        .subscribe({
+
+          next:()=>{
+
+            this.refreshMaintenanceRecords();
+
+            this.closeForm();
+
+          },
+
+          error:(error)=>{
+
+            console.error(
+              'Erreur modification maintenance',
+              error
+            );
+
+          }
+
+        });
+
+
+
+    }
+    else{
+
+
+      this.maintenanceService
+        .add(
+          maintenanceData
+        )
+        .subscribe({
+
+          next:()=>{
+
+            this.refreshMaintenanceRecords();
+
+            this.closeForm();
+
+          },
+
+
+          error:(error)=>{
+
+            console.error(
+              'Erreur ajout maintenance',
+              error
+            );
+
+          }
+
+        });
+
+
     }
 
-    this.refreshMaintenanceRecords();
-    this.closeForm();
+
   }
 
+
+
+
+
   applyFilter(event: Event): void {
+
+
     const value =
       (event.target as HTMLInputElement)
-        .value;
+      .value;
+
 
     this.dataSource.filter =
       value.trim().toLowerCase();
+
+
   }
+
+
+
+
+
 
   viewMaintenance(
     maintenance: MaintenanceRecord
   ): void {
+
+
     this.selectedMaintenance =
       maintenance;
 
+
     this.showForm = false;
+
+
     this.editingMaintenanceId = null;
+
+
   }
 
+
+
+
+
+
   closeMaintenanceDetails(): void {
+
     this.selectedMaintenance = null;
+
   }
+
+
+
+
+
 
   editMaintenance(
     maintenance: MaintenanceRecord
   ): void {
+
+
     this.refreshTrucks();
 
+
     this.selectedMaintenance = null;
+
 
     this.editingMaintenanceId =
       maintenance.id;
 
+
     this.showForm = true;
 
+
+
     this.maintenanceForm.setValue({
-      truck: maintenance.truck,
+
+
+      truck:
+        maintenance.truck,
+
+
       maintenanceType:
         maintenance.maintenanceType,
+
+
       description:
         maintenance.description,
+
+
       scheduledDate:
         maintenance.scheduledDate,
-      mileage: maintenance.mileage,
-      cost: maintenance.cost,
-      workshop: maintenance.workshop,
-      status: maintenance.status,
+
+
+      mileage:
+        maintenance.mileage,
+
+
+      cost:
+        maintenance.cost,
+
+
+      workshop:
+        maintenance.workshop,
+
+
+      status:
+        maintenance.status
+
     });
+
+
   }
+
+
+
+
 
   deleteMaintenance(
     maintenance: MaintenanceRecord
   ): void {
-    const confirmation = confirm(
-      `Voulez-vous vraiment supprimer la maintenance du camion ${maintenance.truck} ?`
-    );
 
-    if (!confirmation) {
+
+
+    const confirmation =
+      confirm(
+        `Voulez-vous vraiment supprimer la maintenance du camion ${maintenance.truck} ?`
+      );
+
+
+
+    if(!confirmation){
+
       return;
+
     }
 
-    this.maintenanceService.delete(
-      maintenance.id
-    );
 
-    this.refreshMaintenanceRecords();
 
-    if (
-      this.selectedMaintenance?.id ===
-      maintenance.id
-    ) {
-      this.selectedMaintenance = null;
-    }
 
-    if (
-      this.editingMaintenanceId ===
-      maintenance.id
-    ) {
-      this.closeForm();
-    }
+
+    this.maintenanceService
+      .delete(
+        maintenance.id
+      )
+      .subscribe({
+
+        next:()=>{
+
+
+          this.refreshMaintenanceRecords();
+
+
+          if(
+            this.selectedMaintenance?.id ===
+            maintenance.id
+          ){
+
+            this.selectedMaintenance = null;
+
+          }
+
+
+
+          if(
+            this.editingMaintenanceId ===
+            maintenance.id
+          ){
+
+            this.closeForm();
+
+          }
+
+
+        },
+
+
+        error:(error)=>{
+
+          console.error(
+            'Erreur suppression maintenance',
+            error
+          );
+
+        }
+
+
+      });
+
+
   }
+
+
+
+
 
   private refreshMaintenanceRecords(): void {
-    this.dataSource.data =
-      this.maintenanceService.getAll();
+
+
+    this.maintenanceService
+      .getAll()
+      .subscribe({
+
+        next:(data:MaintenanceRecord[])=>{
+
+
+          this.dataSource.data = data;
+
+
+        },
+
+
+        error:(error)=>{
+
+
+          console.error(
+            'Erreur chargement maintenance',
+            error
+          );
+
+
+        }
+
+
+      });
+
+
   }
+
+
+
+
 
   private refreshTrucks(): void {
 
-  this.trucksService
-    .getAll()
-    .subscribe({
 
-      next:(data:Truck[])=>{
+    this.trucksService
+      .getAll()
+      .subscribe({
 
-        this.trucks = data;
+        next:(data:Truck[])=>{
 
-      }
+          this.trucks = data;
 
-    });
+        },
 
-}
+
+        error:(error)=>{
+
+          console.error(
+            'Erreur chargement camions',
+            error
+          );
+
+        }
+
+
+      });
+
+
+  }
+
+
+
+
 
   private resetForm(): void {
+
+
     this.maintenanceForm.reset({
-      truck: '',
-      maintenanceType: '',
-      description: '',
-      scheduledDate: '',
-      mileage: 0,
-      cost: 0,
-      workshop: '',
-      status: 'Planifiée',
+
+
+      truck:'',
+
+      maintenanceType:'',
+
+      description:'',
+
+      scheduledDate:'',
+
+      mileage:0,
+
+      cost:0,
+
+      workshop:'',
+
+      status:'Planifiée'
+
+
     });
+
+
   }
+
+
+
 }

@@ -204,16 +204,44 @@ private loadTracking(): void {
 
 private loadMaintenance(): void {
 
-  this.maintenanceRecords =
-    this.maintenanceService.getAll();
+  this.maintenanceService
+    .getAll()
+    .subscribe({
+
+      next: (data) => {
+        this.maintenanceRecords = data;
+      },
+
+      error: (error) => {
+        console.error(
+          'Erreur chargement maintenance',
+          error
+        );
+      }
+
+    });
 
 }
 
 
 private loadNotifications(): void {
 
-  this.notifications =
-    this.notificationsService.getAll();
+  this.notificationsService
+    .getAll()
+    .subscribe({
+
+      next: (data) => {
+        this.notifications = data;
+      },
+
+      error: (error) => {
+        console.error(
+          'Erreur chargement notifications',
+          error
+        );
+      }
+
+    });
 
 }
 
