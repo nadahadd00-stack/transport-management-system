@@ -144,10 +144,10 @@ export class Trucks implements OnInit {
       ],
 
 
-      status: [
-        'Disponible',
-        Validators.required
-      ]
+     status: [
+  'DISPONIBLE',
+  Validators.required
+]
 
     });
 
@@ -520,7 +520,7 @@ export class Trucks implements OnInit {
       fuelType:'Diesel',
 
 
-      status:'Disponible'
+      status:'DISPONIBLE'
 
 
     });

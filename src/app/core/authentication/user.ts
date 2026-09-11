@@ -4,7 +4,7 @@ export const admin: User = {
   id: 1,
   name: 'Administrateur TMS',
   email: 'admin@tms.ma',
-  avatar: 'images/avatar.jpg',
+  avatar: 'images/image.png',
 };
 
 export const guest: User = {
