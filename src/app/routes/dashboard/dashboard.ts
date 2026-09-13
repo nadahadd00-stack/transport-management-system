@@ -196,8 +196,25 @@ private loadShipments(): void {
 
 private loadTracking(): void {
 
-  this.trackingRecords =
-    this.trackingService.getAll();
+  this.trackingService
+  .getAll()
+  .subscribe({
+    next: (data) => {
+
+      this.trackingRecords = data;
+
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Erreur chargement tracking dashboard',
+        error
+      );
+
+    }
+
+  });
 
 }
 
