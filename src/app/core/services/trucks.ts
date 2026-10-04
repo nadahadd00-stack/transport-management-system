@@ -20,10 +20,11 @@ export interface Truck {
   fuelType: string;
 
   status:
+    
     | 'DISPONIBLE'
-    |  'AFFECTE'
+    | 'AFFECTE'
     | 'MAINTENANCE'
-    | 'Hors service';
+    | 'HORS_SERVICE';
 
 }
 

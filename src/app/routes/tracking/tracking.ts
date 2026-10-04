@@ -20,12 +20,13 @@ import {
 
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-
 import {
   TrackingRecord,
   TrackingService,
 } from '../../core/services/tracking';
 
+import { Truck, TrucksService } from '../../core/services/trucks';
+import { Driver, DriversService } from '../../core/services/drivers';
 
 
 @Component({
@@ -57,22 +58,27 @@ export class Tracking implements OnInit {
   private readonly trackingService =
     inject(TrackingService);
 
+  private readonly trucksService =
+    inject(TrucksService);
+
+  private readonly driversService =
+    inject(DriversService);
+
 
 
   showForm = false;
 
+  selectedTracking: TrackingRecord | null = null;
 
-  selectedTracking:
-    TrackingRecord | null = null;
+  editingTrackingId: number | null = null;
 
+  // Listes dynamiques pour les dropdowns
+  trucks: Truck[] = [];
 
-  editingTrackingId:
-    number | null = null;
-
+  drivers: Driver[] = [];
 
 
   displayedColumns: string[] = [
-
     'shipmentReference',
     'truck',
     'driver',
@@ -81,487 +87,188 @@ export class Tracking implements OnInit {
     'progress',
     'status',
     'actions',
-
   ];
 
 
-
-  dataSource =
-    new MatTableDataSource<TrackingRecord>([]);
+  dataSource = new MatTableDataSource<TrackingRecord>([]);
 
 
+  trackingForm = this.formBuilder.nonNullable.group({
+    shipmentReference: ['', Validators.required],
+    truck: ['', Validators.required],
+    driver: ['', Validators.required],
+    origin: ['', Validators.required],
+    destination: ['', Validators.required],
+    currentLocation: ['', Validators.required],
+    progress: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+    lastUpdate: ['', Validators.required],
+    status: ['En attente', Validators.required],
+  });
 
 
-  trackingForm =
-    this.formBuilder.nonNullable.group({
-
-
-      shipmentReference:[
-        '',
-        Validators.required
-      ],
-
-
-      truck:[
-        '',
-        Validators.required
-      ],
-
-
-      driver:[
-        '',
-        Validators.required
-      ],
-
-
-      origin:[
-        '',
-        Validators.required
-      ],
-
-
-      destination:[
-        '',
-        Validators.required
-      ],
-
-
-      currentLocation:[
-        '',
-        Validators.required
-      ],
-
-
-      progress:[
-        0,
-        [
-          Validators.required,
-          Validators.min(0),
-          Validators.max(100)
-        ]
-      ],
-
-
-      lastUpdate:[
-        '',
-        Validators.required
-      ],
-
-
-      status:[
-        'En attente',
-        Validators.required
-      ],
-
-
-    });
-
-
-
-
-
-  ngOnInit():void{
-
+  ngOnInit(): void {
     this.loadTracking();
-
+    this.loadTrucks();
+    this.loadDrivers();
   }
 
 
-
-
-
-  private loadTracking():void{
-
-
-    this.trackingService
-    .getAll()
-    .subscribe({
-
-      next:(data)=>{
-
+  private loadTracking(): void {
+    this.trackingService.getAll().subscribe({
+      next: (data) => {
         this.dataSource.data = data;
-
       },
-
-
-      error:(err)=>{
-
-        console.error(
-          'Erreur chargement tracking',
-          err
-        );
-
-      }
-
+      error: (err) => {
+        console.error('Erreur chargement tracking', err);
+      },
     });
-
-
   }
 
 
+  private loadTrucks(): void {
+    this.trucksService.getAll().subscribe({
+      next: (data) => {
+        this.trucks = data;
+      },
+      error: (err) => {
+        console.error('Erreur chargement camions', err);
+      },
+    });
+  }
 
 
+  private loadDrivers(): void {
+    this.driversService.getAll().subscribe({
+      next: (data) => {
+        this.drivers = data;
+      },
+      error: (err) => {
+        console.error('Erreur chargement chauffeurs', err);
+      },
+    });
+  }
 
 
-  toggleForm():void{
-
-
-    if(this.showForm){
-
+  toggleForm(): void {
+    if (this.showForm) {
       this.closeForm();
-
       return;
-
     }
-
-
     this.openAddForm();
-
-
   }
 
 
-
-
-
-
-  openAddForm():void{
-
-
+  openAddForm(): void {
     this.editingTrackingId = null;
-
     this.selectedTracking = null;
-
     this.resetForm();
-
     this.showForm = true;
-
-
   }
 
 
-
-
-
-
-
-  closeForm():void{
-
-
+  closeForm(): void {
     this.showForm = false;
-
     this.editingTrackingId = null;
-
     this.resetForm();
-
-
   }
 
 
-
-
-
-
-
-
-  saveTracking():void{
-
-
-    if(this.trackingForm.invalid){
-
+  saveTracking(): void {
+    if (this.trackingForm.invalid) {
       this.trackingForm.markAllAsTouched();
-
       return;
-
     }
 
+    const value = this.trackingForm.getRawValue();
 
-
-
-    const value =
-    this.trackingForm.getRawValue();
-
-
-
-
-    const trackingData:
-    Omit<TrackingRecord,'id'> = {
-
-
-      shipmentReference:
-      value.shipmentReference
-      .trim()
-      .toUpperCase(),
-
-
-      truck:
-      value.truck.trim(),
-
-
-      driver:
-      value.driver.trim(),
-
-
-      origin:
-      value.origin.trim(),
-
-
-      destination:
-      value.destination.trim(),
-
-
-      currentLocation:
-      value.currentLocation.trim(),
-
-
-      progress:
-      value.progress,
-
-
-      lastUpdate:
-      value.lastUpdate,
-
-
-      status:
-      value.status as TrackingRecord['status']
-
-
+    const trackingData: Omit<TrackingRecord, 'id'> = {
+      shipmentReference: value.shipmentReference.trim().toUpperCase(),
+      truck: value.truck.trim(),
+      driver: value.driver.trim(),
+      origin: value.origin.trim(),
+      destination: value.destination.trim(),
+      currentLocation: value.currentLocation.trim(),
+      progress: value.progress,
+      lastUpdate: value.lastUpdate,
+      status: value.status as TrackingRecord['status'],
     };
 
-
-
-
-
-    if(this.editingTrackingId !== null){
-
-
-      this.trackingService
-      .update(
-        this.editingTrackingId,
-        trackingData
-      )
-      .subscribe(()=>{
-
-
+    if (this.editingTrackingId !== null) {
+      this.trackingService.update(this.editingTrackingId, trackingData).subscribe(() => {
         this.loadTracking();
-
         this.closeForm();
-
-
       });
-
-
-
-    }
-    else{
-
-
-      this.trackingService
-      .add(trackingData)
-      .subscribe({
-
-        next:()=>{
-
+    } else {
+      this.trackingService.add(trackingData).subscribe({
+        next: () => {
           this.loadTracking();
-
           this.closeForm();
-
         },
-
-
-        error:(err)=>{
-
-          console.error(
-            'SAVE ERROR',
-            err
-          );
-
-        }
-
-
+        error: (err) => {
+          console.error('SAVE ERROR', err);
+        },
       });
-
-
     }
-
-
   }
 
 
-
-
-
-
-
-
-  applyFilter(event:Event):void{
-
-
-    const value =
-    (event.target as HTMLInputElement)
-    .value;
-
-
-    this.dataSource.filter =
-    value.trim().toLowerCase();
-
-
+  applyFilter(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
 
-
-
-
-
-
-  viewTracking(
-    tracking:TrackingRecord
-  ):void{
-
-
+  viewTracking(tracking: TrackingRecord): void {
     this.selectedTracking = tracking;
-
     this.showForm = false;
-
-
   }
 
 
-
-
-
-
-  closeTrackingDetails():void{
-
-
+  closeTrackingDetails(): void {
     this.selectedTracking = null;
-
-
   }
 
 
-
-
-
-
-
-  editTracking(
-    tracking:TrackingRecord
-  ):void{
-
-
-    this.editingTrackingId =
-    tracking.id;
-
-
+  editTracking(tracking: TrackingRecord): void {
+    this.editingTrackingId = tracking.id;
     this.showForm = true;
 
-
-
     this.trackingForm.setValue({
-
-      shipmentReference:
-      tracking.shipmentReference,
-
-
-      truck:
-      tracking.truck,
-
-
-      driver:
-      tracking.driver,
-
-
-      origin:
-      tracking.origin,
-
-
-      destination:
-      tracking.destination,
-
-
-      currentLocation:
-      tracking.currentLocation,
-
-
-      progress:
-      tracking.progress,
-
-
-      lastUpdate:
-      tracking.lastUpdate,
-
-
-      status:
-      tracking.status,
-
-
+      shipmentReference: tracking.shipmentReference,
+      truck: tracking.truck,
+      driver: tracking.driver,
+      origin: tracking.origin,
+      destination: tracking.destination,
+      currentLocation: tracking.currentLocation,
+      progress: tracking.progress,
+      lastUpdate: tracking.lastUpdate,
+      status: tracking.status,
     });
-
-
   }
 
 
-
-
-
-
-
-
-  deleteTracking(
-    tracking:TrackingRecord
-  ):void{
-
-
-    if(!confirm(
-      `Supprimer le suivi ${tracking.shipmentReference} ?`
-    )){
-
+  deleteTracking(tracking: TrackingRecord): void {
+    if (!confirm(`Supprimer le suivi ${tracking.shipmentReference} ?`)) {
       return;
-
     }
 
-
-
-    this.trackingService
-    .delete(tracking.id)
-    .subscribe(()=>{
-
-
+    this.trackingService.delete(tracking.id).subscribe(() => {
       this.loadTracking();
-
-
     });
-
-
   }
 
 
-
-
-
-
-
-
-  private resetForm():void{
-
-
+  private resetForm(): void {
     this.trackingForm.reset({
-
-      shipmentReference:'',
-      truck:'',
-      driver:'',
-      origin:'',
-      destination:'',
-      currentLocation:'',
-      progress:0,
-      lastUpdate:'',
-      status:'En attente',
-
+      shipmentReference: '',
+      truck: '',
+      driver: '',
+      origin: '',
+      destination: '',
+      currentLocation: '',
+      progress: 0,
+      lastUpdate: '',
+      status: 'En attente',
     });
-
-
   }
-
-
 }

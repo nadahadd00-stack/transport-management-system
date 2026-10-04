@@ -146,10 +146,10 @@
           <mat-label>Type de carburant</mat-label>
 
           <mat-select formControlName="fuelType">
-            <mat-option value="Diesel">Diesel</mat-option>
-            <mat-option value="Essence">Essence</mat-option>
-            <mat-option value="Électrique">Électrique</mat-option>
-            <mat-option value="Hybride">Hybride</mat-option>
+            <mat-option value="DIESEL">Diesel</mat-option>
+            <mat-option value="ESSENCE">Essence</mat-option>
+            <mat-option value="ELECTRIQUE">Électrique</mat-option>
+            <mat-option value="HYBRIDE">Hybride</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -157,10 +157,10 @@
           <mat-label>Statut</mat-label>
 
           <mat-select formControlName="status">
-            <mat-option value="Disponible">Disponible</mat-option>
-            <mat-option value="Affecté">Affecté</mat-option>
-            <mat-option value="Maintenance">Maintenance</mat-option>
-            <mat-option value="Hors service">Hors service</mat-option>
+            <mat-option value="DISPONIBLE">Disponible</mat-option>
+            <mat-option value="AFFECTE">Affecté</mat-option>
+            <mat-option value="MAINTENANCE">Maintenance</mat-option>
+            <mat-option value="HORS_SERVICE">Hors service</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -254,7 +254,7 @@
               selectedTruck.status === 'MAINTENANCE'
             "
             [class.status-out]="
-              selectedTruck.status === 'Hors service'
+              selectedTruck.status === 'HORS_SERVICE'
             "
           >
             {{ selectedTruck.status }}
@@ -351,16 +351,16 @@
           <span
             class="status-badge"
             [class.status-available]="
-              truck.status === 'Disponible'
+              truck.status === 'DISPONIBLE'
             "
             [class.status-assigned]="
-              truck.status === 'Affecté'
+              truck.status === 'AFFECTE'
             "
             [class.status-maintenance]="
-              truck.status === 'Maintenance'
+              truck.status === 'MAINTENANCE'
             "
             [class.status-out]="
-              truck.status === 'Hors service'
+              truck.status === 'HORS_SERVICE'
             "
           >
             {{ truck.status }}
